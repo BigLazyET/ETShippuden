@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <!--https://stackoverflow.com/questions/44111589/using-pre-and-post-build-actions-in-dotnet-core-csproj-files-->
+  <!--https://docs.microsoft.com/en-us/visualstudio/msbuild/exec-task?view=vs-2019-->
+
+  <Target Name="MyPreCompileTarget" BeforeTargets="Build">
+    <Message Importance="high" Text="Test Message" />
+    <Exec Command="git --version"/>
+    <Exec Command="node -v"/>
+    <Exec Command="powershell -c Get-Location"/>
+    <Message Importance="high" Text="Test Message" />
+  </Target>
+
+  
+
+</Project>

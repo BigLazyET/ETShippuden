@@ -1,0 +1,108 @@
+基于pg_auto_failover搭建PG集群之三
+---------------------
+
+#### 写在前面
+* 搭建：请参照 [基于pg_auto_failover搭建PG集群之一]
+* 状况集合：请参照 [基于pg_auto_failover搭建PG集群之二]
+
+#### 一、完善集群，提高可用性
+
+##### 0. 目的
+保证pg_autoctl service不会因为异常kill或机器reboot而停止
+
+##### 1. 动手之前须知
+* 默认集群在 pg service停止 之后会被重新自动拉起，如以下三种情况：
+```
+// 第一种情况：手动stop pg service
+pg_ctl stop -D pg_data/node/
+
+// 第二种情况：手动正常kill掉postgres服务器进程
+[root@tv1-jipiao-test-01 /]# ps aux | grep "postgres"
+postgres  2849  0.0  0.0  72816  3260 ?        Ss   15:21   0:00 /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node_data/
+postgres  2856  0.0  0.4 388304 16684 ?        S    15:21   0:00 /usr/pgsql-11/bin/postgres -D /pg_data/node_data -p 5432 -h *
+postgres  2857  0.0  0.0 243012  1892 ?        Ss   15:21   0:00 postgres: logger
+postgres  2858  0.0  0.0 388416  2736 ?        Ss   15:21   0:00 postgres: startup   recovering 00000003000000000000000D
+postgres  2859  0.0  0.0 388304  2012 ?        Ss   15:21   0:00 postgres: checkpointer
+postgres  2860  0.0  0.0 388304  3072 ?        Ss   15:21   0:00 postgres: background writer
+postgres  2861  0.0  0.0 243220  1940 ?        Ss   15:21   0:00 postgres: stats collector
+postgres  2862  0.0  0.0 395132  3600 ?        Ss   15:21   0:00 postgres: walreceiver
+root      5595  0.0  0.0 112708   968 pts/0    S+   15:40   0:00 grep --color=auto postgres
+[root@tv1-jipiao-test-01 /]# kill 2856
+[root@tv1-jipiao-test-01 /]# ps aux | grep "postgres"
+postgres  2849  0.0  0.0  72816  3260 ?        Ss   15:21   0:00 /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node_data/
+postgres  5612  0.2  0.4 388304 16612 ?        S    15:41   0:00 /usr/pgsql-11/bin/postgres -D /pg_data/node_data -p 5432 -h *
+postgres  5613  0.0  0.0 243012  1896 ?        Ss   15:41   0:00 postgres: logger
+postgres  5614  0.0  0.0 388416  2704 ?        Ss   15:41   0:00 postgres: startup   recovering 00000003000000000000000D
+postgres  5615  0.0  0.0 388304  2012 ?        Ss   15:41   0:00 postgres: checkpointer
+postgres  5616  0.0  0.0 388304  2016 ?        Ss   15:41   0:00 postgres: background writer
+postgres  5617  0.0  0.0 243220  1944 ?        Ss   15:41   0:00 postgres: stats collector
+postgres  5618  0.0  0.0 395132  3604 ?        Ss   15:41   0:00 postgres: walreceiver
+root      5623  0.0  0.0 112708   972 pts/0    S+   15:41   0:00 grep --color=auto postgres
+
+// 第三种情况：手动非正常kill掉postgres 服务器进程
+[root@tv1-jipiao-test-01 /]# ps aux | grep "postgres"
+postgres  2849  0.0  0.0  72816  3260 ?        Ss   15:21   0:00 /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node_data/
+postgres  5612  0.0  0.4 388304 16684 ?        S    15:41   0:00 /usr/pgsql-11/bin/postgres -D /pg_data/node_data -p 5432 -h *
+postgres  5613  0.0  0.0 243012  1896 ?        Ss   15:41   0:00 postgres: logger
+postgres  5614  0.0  0.0 388416  2704 ?        Ss   15:41   0:00 postgres: startup   recovering 00000003000000000000000D
+postgres  5615  0.0  0.0 388304  2012 ?        Ss   15:41   0:00 postgres: checkpointer
+postgres  5616  0.0  0.0 388304  3072 ?        Ss   15:41   0:00 postgres: background writer
+postgres  5617  0.0  0.0 243220  1944 ?        Ss   15:41   0:00 postgres: stats collector
+postgres  5618  0.0  0.0 395132  3604 ?        Ss   15:41   0:00 postgres: walreceiver
+root      6150  0.0  0.0 112708   968 pts/0    S+   15:44   0:00 grep --color=auto postgres
+[root@tv1-jipiao-test-01 /]# kill -9 5612
+[root@tv1-jipiao-test-01 /]# ps aux | grep "postgres"
+postgres  2849  0.0  0.0  72816  3264 ?        Ss   15:21   0:00 /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node_data/
+postgres  6167  0.6  0.4 388304 16620 ?        S    15:44   0:00 /usr/pgsql-11/bin/postgres -D /pg_data/node_data -p 5432 -h *
+postgres  6168  0.0  0.0 243012  1860 ?        Ss   15:44   0:00 postgres: logger
+postgres  6169  0.3  0.0 388416  2732 ?        Ss   15:44   0:00 postgres: startup   recovering 00000003000000000000000D
+postgres  6170  0.0  0.0 388304  2008 ?        Ss   15:44   0:00 postgres: checkpointer
+postgres  6171  0.0  0.0 388304  2016 ?        Ss   15:44   0:00 postgres: background writer
+postgres  6172  0.0  0.0 243220  1912 ?        Ss   15:44   0:00 postgres: stats collector
+postgres  6173  0.0  0.0 395132  3604 ?        Ss   15:44   0:00 postgres: walreceiver
+root      6178  0.0  0.0 112708   972 pts/0    S+   15:44   0:00 grep --color=auto postgres
+```
+* 机器reboot之后，pg_autoctl和pg 服务都会停止，且不自启动
+* 机器reboot之后，直接pg_autoctl run启动pg_autoctl服务之后，会顺带观察postgres服务是否在运行，不在运行的话，会把pg服务拉起来
+ 
+##### 2. 动手（以下可以适用于monitor/primary/secondary）
+
+参考文档：https://www.cnblogs.com/wutao666/p/9781567.html
+
+###### a. 目的： 
+* 自定义服务让pg_autoctl服务能自启动
+* 让pg_autoctl遇到异常退出或kill的时候能够重新启动
+
+###### b. 自定义服务
+* 创建一个服务文件my_pg_autoctl.service，并编辑，如下所示：
+```
+// 第一步:
+vim /usr/lib/systemd/system/my_pg_autoctl.service
+
+// 第二步（pgdata参数请严格自己定义的pgdata路径去设置）：
+[Unit]
+Description=Postgresql Auto Ctl
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=simple
+User=postgres
+Group=postgres
+ExecStart=/usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/monitor/
+ExecReload=/usr/pgsql-11/bin/pg_autoctl reload --pgdata /pg_data/monitor/
+ExecStop=/usr/pgsql-11/bin/pg_autoctl stop --pgdata /pg_data/monitor/
+Restart=on-failure
+KillSignal=SIGINT
+
+[Install]
+WantedBy=multi-user.target
+```
+* 设置自启动
+```
+systemctl enable /usr/lib/systemd/system/my_pg_autoctl.service
+```
+
+##### 3. 测试
+* 机器reboot，服务重启 get and check，成功，集群短暂变化之后，恢复主从
+* 找到你自定义的服务进程，直接kill -9，服务重启 get and check，成功，同上
+* 当对primary进行测试的时候，最终primary会降级成secondary，而secondary升级为primary

@@ -1,0 +1,153 @@
+基于pg_auto_failover搭建PG集群之一
+---------------------------
+
+**本文档仅仅旨在讨论如何基于pg_auto_failover搭建PG集群**
+
+#### 写在前面
+* 采用原生应用包搭建，非Docker镜像搭建
+* [pg_auto_failover地址及文档](https://github.com/BigLazyET/pg_auto_failover)
+
+#### 搭建环境
+* 三台虚拟机：一台做monitor，一台做primary，一台做secondary
+* 虚拟机系统：CentOS 7.2
+* monitor：A
+* primary：B
+* secondary：C
+
+#### 一、pg安装
+官方地址：https://www.postgresql.org/download/linux/redhat/
+
+* yum install https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm
+* yum -y install postgresql11 postgresql11-contrib postgresql11-server
+
+#### 二、pg_auto_failover安装
+
+* 由于你懂的原因，可能需要先配置 /etc/yum.conf（待定）
+* vim /etc/yum.conf，添加一行proxy=http://10.101.124.5:1087（待定）
+* 以上步骤只在尝试如下操作后，发现连接不可用的时候再进行配置yum.conf，否则不要配置
+* curl https://install.citusdata.com/community/rpm.sh | sudo bash
+* sudo yum install -y pg-auto-failover10_11
+
+#### 三、基于pg_auto_failover搭建PG集群
+
+**特别注意：** 如果PG版本为11，则需要额外安装一下openssl，以解决兼容问题
+```
+yum -y install openssl
+// 否则出现的问题：
+ERROR Failed to start PostgreSQL. pg_ctl start returned: 1
+ERROR waiting for server to start....2019-06-27 05:59:28.392 UTC [9997] FATAL:  could not load library "/usr/pgsql-11/lib/pgautofailover.so": /usr/pgsql-11/lib/libpq.so.5: symbol X509_get_signature_nid, version libcrypto.so.10 not defined in file libcrypto.so.10 with link time reference
+```
+##### 1. 创建monitor
+
+* 创建一个目录用于存储PG Data：
+```
+mkdir pg_data
+```
+* 将此目录的权限赋给postgres用户：
+```
+chown -R postgres:postgres pg_data
+```
+* 创建monitor：
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl create monitor --pgctl /usr/pgsql-11/bin/pg_ctl --pgdata pg_data/monitor --nodename A
+```
+
+* 启动keeper：
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/monitor
+```
+
+* 从monitor获取PG URL，即连接字符串，供primary和secondary连接使用
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl show uri --pgdata /pg_data/monitor/
+```
+
+##### 2. 创建primary
+
+* 创建一个目录用于存储PG Data：
+```
+mkdir pg_data
+```
+* 将此目录的权限赋给postgres用户：
+```
+chown -R postgres:postgres pg_data
+```
+* 创建primary
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl create postgres --pgdata /pg_data/node --pgctl /usr/pgsql-11/bin/pg_ctl --nodename B --monitor postgres://autoctl_node@A:5432/pg_auto_failover
+```
+* 运行keeper service，每隔五秒连接pg_auto_failover的monitor，并实现所需的状态变化
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node/
+```
+* 这个时候可以去monitor机器上查看刚刚创建的primary有没有挂载上来
+```
+sudo su postgres
+export PATH=/usr/pgsql-11/bin:$PATH
+pg_autoctl show state --pgdata /pg_data/monitor/
+```
+
+##### 3. 创建secondary
+
+* 创建一个目录用于存储PG Data：
+```
+mkdir pg_data
+```
+* 将此目录的权限赋给postgres用户：
+```
+chown -R postgres:postgres pg_data
+```
+* 创建secondary
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl create postgres --pgdata /pg_data/node --pgctl /usr/pgsql-11/bin/pg_ctl --nodename 10.100.216.158 --monitor postgres://autoctl_node@A:5432/pg_auto_failover
+```
+* 运行keeper service，每隔五秒连接pg_auto_failover的monitor，并实现所需的状态变化
+```
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node/
+```
+* 这个时候可以去monitor机器上查看刚刚创建的secondary有没有挂载上来
+```
+sudo su postgres
+export PATH=/usr/pgsql-11/bin:$PATH
+pg_autoctl show state --pgdata /pg_data/monitor/
+```
+
+#### 四、可能遇到的问题及解决方案
+
+##### 1. PG 11版本带来的兼容问题
+现象：
+```
+ERROR Failed to start PostgreSQL. pg_ctl start returned: 1
+ERROR waiting for server to start....2019-06-27 05:59:28.392 UTC [9997] FATAL:  could not load library "/usr/pgsql-11/lib/pgautofailover.so": /usr/pgsql-11/lib/libpq.so.5: symbol X509_get_signature_nid, version libcrypto.so.10 not defined in file libcrypto.so.10 with link time reference
+```
+解决方案：
+```
+yum -y install openssl
+```
+
+##### 2. 创建primary/secondary时，无法连接到monitor
+原因：monitor没有配置pg_hba.conf，允许primary/seconary连接
+
+现象：
+```
+ERROR Connection to database failed: FATAL:  no pg_hba.conf entry for host "10.100.216.158", user "autoctl_node", database "pg_auto_failover", SSL off
+
+ERROR Failed to register node 10.100.216.158:5432 in group -1 of formation "default" with initial state "init", see previous lines for details
+ERROR Failed to register the existing local Postgres node "10.100.216.158:5432" running at "/pg_data/node"to the pg_auto_failover monitor at postgres://autoctl_node@A:5432/pg_auto_failover, see above for details
+```
+解决方案：配置monitor的pg_hba.conf
+```
+// 添加一行
+host "pg_auto_failover" "autoctl_node" 10.100.216.0/24 trust
+```
+
+#### 五、其他（不需要看）
+```
+yum-config-manager --disable 17usoft localbase localepel localupdate pgdg10 pgdg11 pgdg94 pgdg95 pgdg96 zabbix zabbix-non-supported
+
+
+yum-config-manager --enable 17usoft localbase localepel localupdate pgdg10 pgdg11 pgdg94 pgdg95 pgdg96 zabbix zabbix-non-supported
+
+
+yum-config-manager --disable citusdata_community citusdata_community-source
+```

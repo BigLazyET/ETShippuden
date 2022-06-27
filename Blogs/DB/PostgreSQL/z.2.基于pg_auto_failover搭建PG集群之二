@@ -1,0 +1,419 @@
+基于pg_auto_failover搭建PG集群之二
+---------------------
+
+**本文档旨在讨论基于pg_auto_failover搭建的PG集群面临的各种情况的变化**
+
+##### 各种情况包含但不限于：
+
+* 默认1个monitor，一个primary，一个secondary的模式；当再次挂在一台pg到monitor上的情形
+* primary drop情形，drop方式：pg_autoctl drop
+* secondary drop情形，drop方式：pg_autoctl drop
+* primary停止pg_autoctl服务的情形，停止方式：pg_autoctl stop
+* secondary停止pg_autoctl服务的情形，停止方式：pg_autoctl stop
+* primary负载上pg服务停止的情形，停止方式：pg_ctl stop
+* secondary负载上pg服务停止的情形，停止方式：pg_ctl stop
+* monitor负载上pg服务停止的情形，停止方式：pg_ctl stop
+* primary 负载reboot
+* secondary 负载reboot
+* monitor 负载reboot
+* 其他...
+
+#### 目前集群状态
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+B | 5432 | 0 | 1 | primary | primary
+C | 5432 | 0 | 2 | secondary | secondary
+
+#### 如果想了解下面的情形是否正确，你所需要的相关知识
+
+* [pg_auto_failover架构](https://github.com/citusdata/pg_auto_failover/blob/master/docs/architecture.rst)
+* [pg_auto_failover容错](https://github.com/citusdata/pg_auto_failover/blob/master/docs/fault-tolerance.rst)
+* [pg_auto_failover有限状态机 - 重要](https://github.com/citusdata/pg_auto_failover/blob/master/docs/fsm.rst)
+* [pg_auto_failover快速入门](https://github.com/citusdata/pg_auto_failover/blob/master/docs/quickstart.rst)
+* [pg_auto_failover查漏补缺](https://github.com/citusdata/pg_auto_failover/blob/master/docs/operations.rst)
+* [pg_auto_failover配置](https://github.com/citusdata/pg_auto_failover/blob/master/docs/ref/configuration.rst)
+* [pg_auto_failover命令参考](https://github.com/citusdata/pg_auto_failover/blob/master/docs/ref/reference.rst)
+
+### 特别注意：
+* 以下操作造成的集群状态变化是连续的，且每次操作都建立在上一次操作的基础上；并不会每次操作前将集群状态改为最初的状态，请阅读时牢记！！！
+
+#### 一、添加第三台机器到Monitor上
+
+##### 1. 添加第三台机器的操作同primary/secondary创建方法一致
+
+* 在创建过程中，未指定group和formation，当然group无法指定，而formation可以指定
+* 当然作为创建的时候可选参数，你可以自定义，不过在此测试中，我们未指定
+
+##### 2. 添加第三台机器到Monitor后集群状态变化
+
+第三台机器：D
+
+**结果：**
+* 正常添加到Monitor，自动**Group+1**，自身状态为Single
+* 仍然在默认的Default的formation中
+
+Name | Port | Role | Pg Data Dir
+---|---|---|---|---|
+A | 5432 | monitor | /pg_data/monitor
+
+Name | Port | Group | Node | Current State | Assigned State | Pg Data Dir
+---|---|---|---|---|---|---|
+B | 5432 | 0 | 1 | primary | primary | /pg_data/node
+C | 5432 | 0 | 2 | secondary | secondary | /pg_data/node
+D | 5432 | 1 | 3 | single | single | /pg_data/node
+
+#### 二、Drop primary
+
+##### 1. 在monitor机器上尝试执行此命令失败，提示找不到option
+```
+pg_autoctl drop node --pgdata /pg_data/monitor
+
+ERROR Failed to find option pg_autoctl.monitor in "/var/lib/pgsql/.config/pg_autoctl/pg_data/monitor/pg_autoctl.cfg"
+ERROR Failed to parse configuration file "/var/lib/pgsql/.config/pg_autoctl/pg_data/monitor/pg_autoctl.cfg"
+```
+* 在monitor机器上查看config，发现 **role = monitor**
+* 其实应该很好理解，你需要移除哪个节点只能在哪个节点上执行移除操作，而不是在monitor上去操作，因为pgdata的参数肯定要是[需要移除节点的pgdata]
+```
+// 在monitor机器上执行查看confgi命令
+pg_autoctl config check --pgdata /pg_data/monitor/
+
+// 结果
+06:14:36 INFO  Managing PostgreSQL installation at "/pg_data/monitor/"
+Discovered PostgreSQL Setup:
+pgdata:             /pg_data/monitor
+pg_ctl:             /usr/pgsql-11/bin/pg_ctl
+pg_version:         11.4
+pghost:             /var/run/postgresql
+pgport:             5432
+proxyport:          0
+pid:                10111
+is in recovery:     no
+Control Version:    1100
+Catalog Version:    201809051
+System Identifier:  6707089590200031096
+
+Current Configuration (includes pgSetup):
+[pg_autoctl]
+role = monitor
+nodename = A
+
+[postgresql]
+pgdata = /pg_data/monitor
+pg_ctl = /usr/pgsql-11/bin/pg_ctl
+username = autoctl_node
+dbname = pg_auto_failover
+host = /var/run/postgresql
+port = 5432
+listen_addresses = *
+```
+
+##### 2. 在primary机器上执行此命令
+
+* 执行命令
+```
+pg_autoctl drop node --pgdata /pg_data/node/
+
+// 执行结果
+06:21:47 INFO  Managing PostgreSQL installation at "/pg_data/node/"
+06:21:47 INFO  Removing local node from the pg_auto_failover monitor.
+06:21:47 INFO  Removing local node state file: "/var/lib/pgsql/.local/share/pg_autoctl/pg_data/node/pg_autoctl.state"
+06:21:47 INFO  Removing local node init state file: "/var/lib/pgsql/.local/share/pg_autoctl/pg_data/node/pg_autoctl.init"
+06:21:47 INFO  Removed the keeper from the monitor and removed the state file from disk.
+06:21:47 INFO  Stopped the pg_autoctl service.
+06:21:48 INFO  Stopped PostgreSQL instance at "/pg_data/node"
+
+// 日志消息
+06:21:43 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "sync", WAL delta is 0.
+06:21:47 WARN  Smart shutdown: received signal Terminated
+06:21:47 ERROR Failed to open file "/var/lib/pgsql/.local/share/pg_autoctl/pg_data/node/pg_autoctl.state": No such file or directory
+06:21:47 ERROR Failed to read Keeper state from file "/var/lib/pgsql/.local/share/pg_autoctl/pg_data/node/pg_autoctl.state"
+06:21:47 ERROR Failed to read keeper state file, retrying...
+06:21:47 INFO  pg_autoctl service stopping
+```
+* 在monitor或者secondary查看此时集群的state和集群events信息
+```
+// 以在monitor上查看集群state为例
+pg_autoctl show state --pgdata /pg_data/monitor/
+```
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | single | single
+D | 5432 | 1 | 3 | single | single
+
+可以看到primary从集群中移除了，原先的scondary失去了primary，自己变成了single   
+我们再看下集群的events的信息
+```
+ 2019-06-28 06:21:47.913463+00 |    default |    0/2 |          secondary |             single | Setting goal state of C:5432 to single as there is no other node.
+ 2019-06-28 06:21:52.936749+00 |    default |    0/2 |          secondary |             single | Setting goal state of C:5432 to single as there is no other node.
+ 2019-06-28 06:21:53.189576+00 |    default |    0/2 |             single |             single | Node C:5432 reported new state single
+```
+
+#### 三、"Pull up" primary 准确来说没有pull而是delete and create new
+
+**注意：** 暂时没有找到如何让primary重新被拉起来或者恢复的方法，只能重新建立新的node
+
+**注意：** 命令中多加了 --allow-removing-pgdata /pg_data/node/ 
+```
+// --allow-removing-pgdata /pg_data/node/ 的意思是 Allow pg_autoctl to remove the database directory
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl create postgres --pgdata /pg_data/node --pgctl /usr/pgsql-11/bin/pg_ctl --nodename B --monitor postgres://autoctl_node@A:5432/pg_auto_failover --allow-removing-pgdata /pg_data/node/
+
+sudo -u postgres /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node/
+```
+此时的集群state：
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | primary | primary
+B | 5432 | 0 | 5 | secondary | secondary
+D | 5432 | 1 | 3 | single | single
+
+可以看到158这台机器升级为primary，而重新被加入到集群的194变成了secondary
+
+#### 四、Drop Secondary
+
+Drop操作同第二条，以下是结论及集群状态：
+
+此时的集群state：
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | single | single
+D | 5432 | 1 | 3 | single | single
+
+#### 五、"Pull up" Secondary
+
+操作同第三条，以下是结论及集群状态：
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | primary | primary
+B | 5432 | 0 | 7 | secondary | secondary
+D | 5432 | 1 | 3 | single | single
+
+#### 六、Stop Primary's pg_autoctl service
+
+```
+pg_autoctl stop --pgata /pg_data/node/ --fast ? --immediate ?
+```
+
+无法确认fast和immdiate参数，无法实验
+
+#### 七、Stop Secondary's pg_autoctl service
+
+原因同第六点
+
+#### 八、Stop Primary's Postgresql service
+
+```
+pg_ctl stop -D /pg_data/node/
+```
+
+此时集群的state状态变化（包括但不限于），以及events信息：
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | primary | demote_timeout
+B | 5432 | 0 | 7 | stop_replication | stop_replication
+D | 5432 | 1 | 3 | single | single
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | demote_timeout | demote_timeout
+B | 5432 | 0 | 7 | stop_replication | stop_replication
+D | 5432 | 1 | 3 | single | single
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | demote_timeout | demote
+B | 5432 | 0 | 7 | wait_primary | wait_primary
+D | 5432 | 1 | 3 | single | single
+
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | secondary | secondary
+B | 5432 | 0 | 7 | primary | primary
+D | 5432 | 1 | 3 | single | single
+
+**结论：**
+* primary的pg服务停止后会被降级，且原来的secondary停止复制
+* 最后原scondary升级为primary，原primary降级未scondary，且服务被拉起来了
+
+#### 九、Stop Secondary's Postgresql service
+
+```
+pg_ctl stop -D /pg_data/node/
+```
+
+此时集群的state状态变化过程（包括但不限于），以及events信息：
+
+Name | Port | Role
+---|---|---|---|
+A | 5432 | monitor
+
+很短暂的经历了：
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | secondary | secondary
+B | 5432 | 0 | 7 | wait_primary | primary
+D | 5432 | 1 | 3 | single | single
+
+然后迅速变为直至最后：
+Name | Port | Group | Node | Current State | Assigned State
+---|---|---|---|---|---|
+C | 5432 | 0 | 2 | secondary | secondary
+B | 5432 | 0 | 7 | primary | primary
+D | 5432 | 1 | 3 | single | single
+
+```
+2019-06-28 09:46:21.318955+00 |    default |    0/7 |            primary |       wait_primary | Setting goal state of B:5432 to wait_primary and C:5432 to catchingup after C:5432 became unhealthy.
+2019-06-28 09:46:21.318955+00 |    default |    0/2 |          secondary |         catchingup | Setting goal state of B:5432 to wait_primary and C:5432 to catchingup after C:5432 became unhealthy.
+2019-06-28 09:46:21.37825+00 |    default |    0/7 |       wait_primary |       wait_primary | Node B:5432 reported new state wait_primary
+2019-06-28 09:46:23.927151+00 |    default |    0/2 |         catchingup |         catchingup | Node C:5432 reported new state catchingup
+2019-06-28 09:46:23.927151+00 |    default |    0/2 |         catchingup |          secondary | Setting goal state of B:5432 to primary and C:5432 to secondary after C:5432 caught up.
+2019-06-28 09:46:23.927151+00 |    default |    0/7 |       wait_primary |            primary | Setting goal state of B:5432 to primary and C:5432 to secondary after C:5432 caught up.
+2019-06-28 09:46:23.951586+00 |    default |    0/2 |          secondary |          secondary | Node C:5432 reported new state secondary
+2019-06-28 09:46:27.931598+00 |    default |    0/7 |            primary |            primary | Node B:5432 reported new state primary
+```
+
+**结论：**
+* secondary的pg服务停止后会被自动拉起来，集群状态会在短暂变化之后回复到初始正常状态
+
+#### 十、Stop Monitor's Postgresql service 
+执行 stop pg service命令：
+```
+pg_ctl stop -D /pg_data/monitor/
+```
+
+结果和现象：
+* monitor pg service并没有自动恢复重启
+* primary和secondary失去对monitor的连接
+* 但是！primary和secondary彼此主从的联系还是存在的，即表示
+* 只失去了主从failover的能力，而没有失去主从流复制的能力！！！
+```
+10:59:03 ERROR Connection to database failed: could not connect to server: Connection refused
+        Is the server running on host "A" and accepting
+        TCP/IP connections on port 5432?
+
+10:59:03 ERROR Failed to retrieve current state from the monitor
+```
+
+重新启动monitor's postgresql service
+```
+pg_ctl start -D /pg_data/monitor
+```
+
+结果和现象：
+* primary和secondary恢复了跟monitor的连接
+* primary和secondary恢复了failover的能力
+ 
+#### 十一、Reboot Secondary
+##### 1. 执行reboot命令：
+```
+reboot
+```
+
+##### 2. Primary的log输出：
+```
+09:44:55 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "sync", WAL delta is 0.
+09:45:03 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "sync", WAL delta is 0.
+09:45:08 ERROR PostgreSQL primary server has lost track of its standby: pg_stat_replication reports no client using the slot "pgautofailover_standby".
+09:45:08 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:15 ERROR PostgreSQL primary server has lost track of its standby: pg_stat_replication reports no client using the slot "pgautofailover_standby".
+09:45:15 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:21 ERROR PostgreSQL primary server has lost track of its standby: pg_stat_replication reports no client using the slot "pgautofailover_standby".
+09:45:21 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:26 ERROR PostgreSQL primary server has lost track of its standby: pg_stat_replication reports no client using the slot "pgautofailover_standby".
+09:45:26 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:32 ERROR PostgreSQL primary server has lost track of its standby: pg_stat_replication reports no client using the slot "pgautofailover_standby".
+09:45:32 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:32 INFO  FSM transition from "primary" to "wait_primary": Secondary became unhealthy
+09:45:32 INFO  Disabling synchronous replication
+09:45:32 INFO  Transition complete: current state is now "wait_primary"
+09:45:32 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:37 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:42 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+09:45:47 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "", WAL delta is -1.
+```
+
+##### 3. 此时查看集群状态：
+* primary -> wait_primary -> wait_primary
+* secondary -> secondary -> catching up
+
+##### 4. reboot之后secondary的检测
+* psql失败 -> postgresql service down
+* systemctl list-unit-files 查看服务启动以及查看当前运行的服务得出pg_autoctl服务也并没有运行
+
+##### 5. 我们执行pg_autoctl run命令
+* 伴随着pg_autoctl服务启动
+* 与monitor进行通信
+* 检测pg service未运行，进行pg_ctl start，将pg service拉起来
+* 集群恢复正常，负载重新回复到secondary的角色
+* secondary负载日志：
+```
+[root@tv1-jipiao-test-01 ~]# sudo -u postgres /usr/pgsql-11/bin/pg_autoctl run --pgdata /pg_data/node_data/
+17:56:33 INFO  Managing PostgreSQL installation at "/pg_data/node_data/"
+17:56:33 INFO  Found a stale pidfile at "/tmp/pg_autoctl/pg_data/node_data/pg_autoctl.pid"
+17:56:33 WARN  Removing the stale pid file "/tmp/pg_autoctl/pg_data/node_data/pg_autoctl.pid"
+17:56:34 INFO  pg_autoctl service is starting
+17:56:34 INFO  Calling node_active for node default/2/0 with current state: secondary, PostgreSQL is not running, sync_state is "", WAL delta is -1.
+17:56:34 INFO  Postgres is not running, starting postgres
+17:56:34 INFO   /usr/pgsql-11/bin/pg_ctl --pgdata /pg_data/node_data --options "-p 5432" --options "-h *" --wait start
+17:56:34 WARN  PostgreSQL was not running, restarted with pid 3772
+17:56:34 INFO  FSM transition from "secondary" to "catchingup": Failed to report back to the monitor, not eligible for promotion
+17:56:34 INFO  Transition complete: current state is now "catchingup"
+17:56:34 INFO  Calling node_active for node default/2/0 with current state: catchingup, PostgreSQL is running, sync_state is "", WAL delta is -1.
+17:56:39 INFO  Calling node_active for node default/2/0 with current state: catchingup, PostgreSQL is running, sync_state is "", WAL delta is -1.
+17:56:39 INFO  FSM transition from "catchingup" to "secondary": Convinced the monitor that I'm up and running, and eligible for promotion again
+17:56:39 INFO  Transition complete: current state is now "secondary"
+17:56:39 INFO  Calling node_active for node default/2/0 with current state: secondary, PostgreSQL is running, sync_state is "", WAL delta is 0.
+17:56:44 INFO  Calling node_active for node default/2/0 with current state: secondary, PostgreSQL is running, sync_state is "", WAL delta is 0.
+```
+* primary负载日志：
+```
+09:56:39 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "async", WAL delta is 0.
+09:56:45 INFO  Calling node_active for node default/1/0 with current state: wait_primary, PostgreSQL is running, sync_state is "async", WAL delta is 0.
+09:56:45 INFO  FSM transition from "wait_primary" to "primary": A healthy secondary appeared
+09:56:45 INFO  Enabling synchronous replication
+09:56:45 INFO  Transition complete: current state is now "primary"
+09:56:45 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "sync", WAL delta is 0.
+09:56:50 INFO  Calling node_active for node default/1/0 with current state: primary, PostgreSQL is running, sync_state is "sync", WAL delta is 0.
+```
+
+#### 十二、Reboot Primary
+##### 1. 执行reboot命令：
+```
+reboot
+```
+
+##### 2. 执行pg_autoctl run之后的结果和状态
+* primary服务重新启动并降级 变为 secondary
+* secondary 升级变为 primary
+ 
+#### 十三、Reboot Monitor
+Reboot之后再次pg_autoctl run后，集群一切正常
+

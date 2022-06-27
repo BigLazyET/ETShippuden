@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ParallelTopic", "ParallelTopic\ParallelTopic.csproj", "{08702208-15B3-4DE2-84CC-60A6E5C79F58}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PLinqTopic", "PLinqTopic\PLinqTopic.csproj", "{9E18BDC1-ED07-4CEE-A74C-70D721B51049}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TplTopic", "TplTopic\TplTopic.csproj", "{75971916-77C8-49A4-8CD6-23CF997ABCF9}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Extras", "Extras", "{636C2A1A-3548-4BF7-91BD-3279D9658AFC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BroadcastBlockWinform", "Extras\BroadcastBlockWinform\BroadcastBlockWinform.csproj", "{C2F6FC2E-0CC1-4106-821C-57D391706BAC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataflowCancellationWinform", "Extras\DataflowCancellationWinform\DataflowCancellationWinform.csproj", "{F816D00D-3F3F-44CF-A055-C52C17D4AAE8}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{08702208-15B3-4DE2-84CC-60A6E5C79F58}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08702208-15B3-4DE2-84CC-60A6E5C79F58}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08702208-15B3-4DE2-84CC-60A6E5C79F58}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08702208-15B3-4DE2-84CC-60A6E5C79F58}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E18BDC1-ED07-4CEE-A74C-70D721B51049}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E18BDC1-ED07-4CEE-A74C-70D721B51049}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E18BDC1-ED07-4CEE-A74C-70D721B51049}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E18BDC1-ED07-4CEE-A74C-70D721B51049}.Release|Any CPU.Build.0 = Release|Any CPU
+		{75971916-77C8-49A4-8CD6-23CF997ABCF9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{75971916-77C8-49A4-8CD6-23CF997ABCF9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{75971916-77C8-49A4-8CD6-23CF997ABCF9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{75971916-77C8-49A4-8CD6-23CF997ABCF9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2F6FC2E-0CC1-4106-821C-57D391706BAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2F6FC2E-0CC1-4106-821C-57D391706BAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2F6FC2E-0CC1-4106-821C-57D391706BAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2F6FC2E-0CC1-4106-821C-57D391706BAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F816D00D-3F3F-44CF-A055-C52C17D4AAE8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F816D00D-3F3F-44CF-A055-C52C17D4AAE8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F816D00D-3F3F-44CF-A055-C52C17D4AAE8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F816D00D-3F3F-44CF-A055-C52C17D4AAE8}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{C2F6FC2E-0CC1-4106-821C-57D391706BAC} = {636C2A1A-3548-4BF7-91BD-3279D9658AFC}
+		{F816D00D-3F3F-44CF-A055-C52C17D4AAE8} = {636C2A1A-3548-4BF7-91BD-3279D9658AFC}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {04092EAA-87D4-4A22-B8AF-A01FC7ED1760}
+	EndGlobalSection
+EndGlobal
