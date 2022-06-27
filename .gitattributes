@@ -8,11 +8,9 @@
 *.PDF	diff=astextplain
 *.rtf	diff=astextplain
 *.RTF	diff=astextplain
-
 *.jpg  	binary
 *.png 	binary
 *.gif 	binary
-
 *.cs text=auto diff=csharp 
 *.vb text=auto
 *.resx text=auto
@@ -42,11 +40,10 @@
 *.fs text=auto
 *.fsx text=auto
 *.hs text=auto
-
 *.csproj text=auto
 *.vbproj text=auto
 *.fsproj text=auto
 *.dbproj text=auto
 *.sln text=auto eol=crlf
-
 *.sh eol=lf
+Apm/Docker/Apm/Agent/opt/otel/otelcontribcol filter=lfs diff=lfs merge=lfs -text
