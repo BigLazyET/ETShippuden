@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell x:Class="ETLab_MauiPlainPureMode.AppShell"
+       xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:local="clr-namespace:ETLab_MauiPlainPureMode"
+       xmlns:page="clr-namespace:ETLab_MauiPlainPureMode.Pages"
+       FlyoutIcon="hanbaobao.svg"
+       FlyoutBehavior="Flyout"
+       FlyoutHeaderBehavior="CollapseOnScroll">
+
+    <!--<Shell.FlyoutHeader>
+        <Label HorizontalOptions="CenterAndExpand"
+               VerticalOptions="CenterAndExpand"
+               Text="Flyout Header" />
+    </Shell.FlyoutHeader>-->
+
+    <FlyoutItem Title="主页"
+                Icon="bingtanghulu.svg">
+        <Tab>
+            <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />
+        </Tab>
+    </FlyoutItem>
+    <!--<FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
+        <Tab Title="NAT类型分析"
+             Icon="zhouzi.png">
+            <ShellContent Title="RFC3489"
+                          ContentTemplate="{DataTemplate page:RFC3489Page}" />
+            <ShellContent Title="RFC5389"
+                          ContentTemplate="{DataTemplate page:RFC5389Page}" />
+        </Tab>
+        <Tab Title="设置"
+             Icon="susi.svg">
+            <ShellContent Title="Setting"
+                          ContentTemplate="{DataTemplate page:SettingPage}" />
+        </Tab>
+    </FlyoutItem>-->
+    <FlyoutItem Title="NAT" FlyoutDisplayOptions="AsMultipleItems">
+        <ShellContent Title="RFC3489" Icon="zhouzi.png"
+                      ContentTemplate="{DataTemplate page:RFC3489Page}" />
+        <ShellContent Title="RFC5389" Icon="wine.png"
+                      ContentTemplate="{DataTemplate page:RFC5389Page}" />
+    </FlyoutItem>
+    <ShellContent Title="Setting"
+                  Icon="susi.svg"
+                  ContentTemplate="{DataTemplate page:SettingPage}" />
+    <ShellContent Title="About"
+                  Icon="tea.png"
+                  ContentTemplate="{DataTemplate page:AboutPage}" />
+    <MenuItem Text="help"
+              IconImageSource="water.svg" />
+
+    <!--<Shell.FlyoutFooter>
+        <Label HorizontalOptions="CenterAndExpand"
+               VerticalOptions="CenterAndExpand"
+               Text="Flyout Footer" />
+    </Shell.FlyoutFooter>-->
+</Shell>
