@@ -49,6 +49,16 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Dns.Net" Version="0.2.0" />
+	  <PackageReference Include="Dns.Net.Abstractions" Version="0.2.0" />
+	  <PackageReference Include="Socks5" Version="1.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\STUN\STUN.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <MauiXaml Update="Pages\AboutPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

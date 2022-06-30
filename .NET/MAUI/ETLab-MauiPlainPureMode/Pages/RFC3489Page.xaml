@@ -21,7 +21,7 @@
                                 VerticalOptions="CenterAndExpand"
                                 CharacterSpacing="1"
                                 Title="选择一个STUN Server"
-                                SelectedItem="{Binding ChoosenSTUNServer}"
+                                SelectedItem="{Binding Config.StunServer}"
                                 ItemsSource="{Binding STUNServers, Mode=OneWay}">
                         </Picker>
                     </Border.Content>
