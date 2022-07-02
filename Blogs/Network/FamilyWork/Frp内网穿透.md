@@ -32,12 +32,12 @@
 ### 五、Sakura Frp
 **自行注册下账号即可**
 #### 1. 首页
-![SakuraFrp首页](../../../Images/Network/sakurafrp.png?raw=true)
+![SakuraFrp首页](https://github.com/BigLazyET/ETShippuden/blob/main/Images/Network/sakurafrp.png?raw=true)
 
 如上图，首页每天签到增加流量，基本够用
 
 #### 2. 新建隧道
-![新建隧道](../../../Images/Network/createtunnel.png?raw=true)
+![新建隧道](https://github.com/BigLazyET/ETShippuden/blob/main/Images/Network/createtunnel.png)
 
 如上图：
 * 选择 穿透 -> 新建隧道 (免费玩家目前最多可创建2个隧道)
