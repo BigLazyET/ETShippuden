@@ -58,3 +58,7 @@
 ![新建隧道](../../../Images/Network/tunneldetailconfig2.png?raw=true)
 
 #### 4. 对在Openwrt的Frp插件进行配置
+将框中的部分配置设置与隧道的配置文件中的配置一致即可
+![新建隧道](../../../Images/Network/frpconfig1.png)
+![新建隧道](../../../Images/Network/frpconfig2.png)
+![新建隧道](../../../Images/Network/tcp_mux.png)
