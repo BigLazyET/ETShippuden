@@ -32,12 +32,12 @@
 ### 五、Sakura Frp
 **自行注册下账号即可**
 #### 1. 首页
-![SakuraFrp首页](../../../Images/Network/sakurafrp.png)
+![SakuraFrp首页](../../../Images/Network/sakurafrp.png?raw=true)
 
 如上图，首页每天签到增加流量，基本够用
 
 #### 2. 新建隧道
-![新建隧道](../../../Images/Network/createtunnel.png)
+![新建隧道](../../../Images/Network/createtunnel.png?raw=true)
 
 如上图：
 * 选择 穿透 -> 新建隧道 (免费玩家目前最多可创建2个隧道)
@@ -50,11 +50,11 @@
 * **其他不明白的可自行查阅SakuraFrp官方文档，很详细**
 
 #### 3. 隧道详细
-![新建隧道](../../../Images/Network/tunnelconfig.png)
+![新建隧道](../../../Images/Network/tunnelconfig.png?raw=true)
 
 **你可以点击最后一列的操作->查看配置文件（你所需要的配置都在其中，也可以随时更改）**
 
-![新建隧道](../../../Images/Network/tunneldetailconfig1.png)
-![新建隧道](../../../Images/Network/tunneldetailconfig2.png)
+![新建隧道](../../../Images/Network/tunneldetailconfig1.png?raw=true)
+![新建隧道](../../../Images/Network/tunneldetailconfig2.png?raw=true)
 
 #### 4. 对在Openwrt的Frp插件进行配置
