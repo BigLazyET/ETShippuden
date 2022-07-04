@@ -13,7 +13,7 @@ namespace STUN.Messages
 
         public IPAddress? Address { get; set; }
 
-        public bool TryParse(ReadOnlySpan<byte> buffer)
+        public virtual bool TryParse(ReadOnlySpan<byte> buffer)
         {
             var length = 4;
             if (buffer.Length < length)
@@ -36,7 +36,7 @@ namespace STUN.Messages
             return true;
         }
 
-        public int WriteTo(Span<byte> buffer)
+        public virtual int WriteTo(Span<byte> buffer)
         {
             Verify.Operation(Address is not null, "You should set Address info");
             Requires.Range(buffer.Length > 4 + 4, nameof(buffer));

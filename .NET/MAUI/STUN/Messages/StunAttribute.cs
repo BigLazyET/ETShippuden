@@ -1,5 +1,6 @@
 ﻿using Microsoft;
 using STUN.Enums;
+using STUN.Messages.StunAttributeValues;
 using System.Buffers.Binary;
 
 namespace STUN.Messages
@@ -59,7 +60,32 @@ namespace STUN.Messages
 
         public int TryParse(ReadOnlySpan<byte> buffer, ReadOnlySpan<byte> magicCookieAndTransactionId)
         {
+            if (buffer.Length < 4)
+                return 0;
+            StunAttributeType = (StunAttributeType)BinaryPrimitives.ReadUInt16BigEndian(buffer);
+            Length = BinaryPrimitives.ReadUInt16BigEndian(buffer[2..]);
+            if (buffer.Length < 4 + Length)
+                return 0;
 
+            var value = buffer.Slice(4, Length);
+            IStunAttributeValue stuAttributeValue = StunAttributeType switch
+            {
+                StunAttributeType.MappedAddress => new MappedAddressStunAttributeValue(),
+                StunAttributeType.XorMappedAddress => new XorMappedAddressStunAttributeValue(magicCookieAndTransactionId),  // special
+                StunAttributeType.ResponseAddress => new ResponseAddressStunAttributeValue(),
+                StunAttributeType.ChangeRequest => new ChangeRequestStunAttributeValue(),   // special
+                StunAttributeType.SourceAddress => new SourceAddressStunAttributeValue(),
+                StunAttributeType.ChangedAddress => new ChangedAddressStunAttributeValue(),
+                StunAttributeType.OtherAddress => new OtherAddressStunAttributeValue(),
+                StunAttributeType.ReflectedFrom => new ReflectedFromStunAttributeValue(),
+                StunAttributeType.ErrorCode => new ErrorCodeStunAttributeValue(),   // special
+                _ => new UselessStunAttributeValue()
+            };
+
+            if (stuAttributeValue.TryParse(value))
+                StunAttributeValue = stuAttributeValue;
+
+            return 4 + Length + (4 - Length % 4) % 4;
         }
     }
 }
