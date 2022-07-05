@@ -4,6 +4,7 @@ using ETLab_MauiPlainPureMode.Models;
 using Microsoft;
 using Socks5.Models;
 using STUN;
+using STUN.Client;
 using STUN.Proxy;
 using System.Net;
 using System.Net.Sockets;
@@ -69,7 +70,16 @@ namespace ETLab_MauiPlainPureMode.ViewModels
             }
 
             using var udpProxy = ProxyFactory.CreateProxy(Config.ProxyType, Result3489.LocalEndPoint, sock5Option);
-            using var stunClient3489 = new();
+            using var stunClient3489 = new StunClient3489(new IPEndPoint(stunServerIp, stunServer.Port), Result3489.LocalEndPoint, udpProxy);
+
+            Result3489 = stunClient3489.ClassicStunResult;
+
+            await stunClient3489.ConnectProxyAsync(cancellationToken);
+            await stunClient3489.QueryAsync(cancellationToken);
+            await stunClient3489.CloseProxyAsync(cancellationToken);
+
+            Result3489 = new ClassicStunResult();
+            Result3489.Clone(stunClient3489.ClassicStunResult);
         }
     }
 }
