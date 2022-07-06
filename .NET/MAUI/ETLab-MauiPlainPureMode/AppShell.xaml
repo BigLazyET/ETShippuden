@@ -7,6 +7,7 @@
        FlyoutIcon="hanbaobao.svg"
        FlyoutBehavior="Flyout"
        FlyoutHeaderBehavior="CollapseOnScroll">
+    <!--CurrentItem="{x:Reference natCheck}"-->
 
     <!--<Shell.FlyoutHeader>
         <Label HorizontalOptions="CenterAndExpand"
@@ -34,11 +35,16 @@
                           ContentTemplate="{DataTemplate page:SettingPage}" />
         </Tab>
     </FlyoutItem>-->
-    <FlyoutItem Title="NAT" FlyoutDisplayOptions="AsMultipleItems">
+    <!--<FlyoutItem Title="NAT" FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent Title="RFC3489" Icon="zhouzi.png"
                       ContentTemplate="{DataTemplate page:RFC3489Page}" />
         <ShellContent Title="RFC5389" Icon="wine.png"
                       ContentTemplate="{DataTemplate page:RFC5389Page}" />
+    </FlyoutItem>-->
+    <FlyoutItem Title="NATCheck" Icon="wine.png">
+        <ShellContent x:Name="natCheck" Title="NATCheck"
+                      Icon="zhouzi.png"
+                      ContentTemplate="{DataTemplate page:NATCheckPage}" />
     </FlyoutItem>
     <ShellContent Title="Setting"
                   Icon="susi.svg"

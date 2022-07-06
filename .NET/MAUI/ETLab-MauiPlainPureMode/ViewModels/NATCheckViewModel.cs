@@ -11,30 +11,24 @@ using System.Net.Sockets;
 
 namespace ETLab_MauiPlainPureMode.ViewModels
 {
-    public class RFC3489ViewModel : BaseViewModel
+    public class NATCheckViewModel : BaseViewModel
     {
         private IDnsClient DnsClient = new DefaultDnsClient();
         private IDnsClient ADnsClient = new DefaultAClient();
         private IDnsClient AAAADnsClient = new DefaultAAAAClient();
 
-        public IEnumerable<string> STUNServers => new List<string>
-        {
-            @"stun.syncthing.net",
-            @"stun.qq.com",
-            @"stun.miwifi.com",
-            @"stun.bige0.com",
-            @"stun.stunprotocol.org"
-        };
+        public IEnumerable<string> STUNServers => Constants.STUNServers;
 
-        public Config Config { get; set; }
+        public NATCheckSetting NATCheckSetting { get; set; }
 
-        public ClassicStunResult Result3489 { get; set; }
+        public NATCheck3489Outcome NATCheck3489Outcome { get; set; }
+
+        public NATCheck5780Outcome NATCheck5780Outcome { get; set; }
 
         public Command<CancellationToken> CheckNATTypeCommand { get; private set; }
 
-        public RFC3489ViewModel()
+        public NATCheckViewModel()
         {
-            Result3489 = new ClassicStunResult();
             CheckNATTypeCommand = new Command<CancellationToken>(CheckNATType);
         }
 
@@ -42,44 +36,47 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         {
             //if (!StunServer.TryParse(Config.StunServer, out StunServer? stunServer))
             //    throw new InvalidOperationException("WRONG STUN Server");
-            Verify.Operation(StunServer.TryParse(Config.StunServer, out StunServer? stunServer), @"WRONG STUN Server");
+            Verify.Operation(StunServer.TryParse(NATCheckSetting.StunServer, out StunServer? stunServer), @"WRONG STUN Server");
 
-            if (!HostnameEndpoint.TryParse(Config.ProxyServer, out HostnameEndpoint? proxyIp))
+            if (!HostnameEndpoint.TryParse(NATCheckSetting.ProxyServer, out HostnameEndpoint? proxyIp))
                 throw new NotSupportedException("Unknown proxy address");
 
             Socks5CreateOption sock5Option = new()
             {
                 Address = await DnsClient.QueryAsync(proxyIp.Hostname, cancellationToken),
                 Port = proxyIp.Port,
-                UsernamePassword = new UsernamePassword { UserName = Config.ProxyUser, Password = Config.ProxyPassword }
+                UsernamePassword = new UsernamePassword { UserName = NATCheckSetting.ProxyUser, Password = NATCheckSetting.ProxyPassword }
             };
 
             IPAddress? stunServerIp;
-            if (Result3489.LocalEndPoint is null)
+            if (NATCheck3489Outcome.LocalIPEndPoint is null)
             {
                 stunServerIp = await DnsClient.QueryAsync(stunServer.Hostname, cancellationToken);
-                Result3489.LocalEndPoint = stunServerIp.AddressFamily is AddressFamily.InterNetworkV6 ?
+                NATCheck3489Outcome.LocalIPEndPoint = stunServerIp.AddressFamily is AddressFamily.InterNetworkV6 ?
                     new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort) : new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
             }
             else
             {
-                if (Result3489.LocalEndPoint.AddressFamily is AddressFamily.InterNetworkV6)
+                if (NATCheck3489Outcome.LocalIPEndPoint.AddressFamily is AddressFamily.InterNetworkV6)
                     stunServerIp = await AAAADnsClient.QueryAsync(stunServer.Hostname, cancellationToken);
                 else
                     stunServerIp = await ADnsClient.QueryAsync(stunServer.Hostname, cancellationToken);
             }
 
-            using var udpProxy = ProxyFactory.CreateProxy(Config.ProxyType, Result3489.LocalEndPoint, sock5Option);
-            using var stunClient3489 = new StunClient3489(new IPEndPoint(stunServerIp, stunServer.Port), Result3489.LocalEndPoint, udpProxy);
+            using var udpProxy = ProxyFactory.CreateProxy(NATCheckSetting.ProxyType, NATCheck3489Outcome.LocalIPEndPoint, sock5Option);
+            using var stunClient3489 = new StunClient3489(new IPEndPoint(stunServerIp, stunServer.Port), NATCheck3489Outcome.LocalIPEndPoint, udpProxy);
 
-            Result3489 = stunClient3489.ClassicStunResult;
+            NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
+            NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
+            NATCheck3489Outcome.PublicIPEndPoint = stunClient3489.ClassicStunResult.PublicEndPoint;
 
             await stunClient3489.ConnectProxyAsync(cancellationToken);
             await stunClient3489.QueryAsync(cancellationToken);
             await stunClient3489.CloseProxyAsync(cancellationToken);
 
-            Result3489 = new ClassicStunResult();
-            Result3489.Clone(stunClient3489.ClassicStunResult);
+            NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
+            NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
+            NATCheck3489Outcome.PublicIPEndPoint = stunClient3489.ClassicStunResult.PublicEndPoint;
         }
     }
 }

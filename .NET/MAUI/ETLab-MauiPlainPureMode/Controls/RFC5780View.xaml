@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentView xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ETLab_MauiPlainPureMode.Controls.RFC5780View">
+
+    <StackLayout>
+        <Label Text="Binding Test" />
+        <Entry IsEnabled="False"
+               Text="{Binding NATCheck5780Outcome.BindingTest}" />
+        <Label Text="Mapping Behavior" />
+        <Entry IsEnabled="False"
+               Text="{Binding NATCheck5780Outcome.MappingBehavior}" />
+        <Label Text="Filtering Behavior" />
+        <Entry IsEnabled="False"
+               Text="{Binding NATCheck5780Outcome.FilteringBehavior}" />
+        <Label Text="Local IPEndPoint" />
+        <Entry IsEnabled="False"
+               Text="{Binding NATCheck5780Outcome.LocalIPEndPoint}" />
+        <Label Text="Public IPEndPoint" />
+        <Entry IsEnabled="False"
+               Text="{Binding NATCheck5780Outcome.PublicIPEndPoint}" />
+    </StackLayout>
+
+</ContentView>

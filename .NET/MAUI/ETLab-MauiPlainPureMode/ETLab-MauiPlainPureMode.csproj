@@ -55,17 +55,20 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\STUN\STUN.csproj" />
+	  <ProjectReference Include="..\..\..\Network\STUN\src\STUN-Client\STUN-Client.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="Controls\RFC3489View.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
+	  <MauiXaml Update="Controls\RFC5780View.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="Pages\AboutPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
-	  <MauiXaml Update="Pages\RFC3489Page.xaml">
-	    <Generator>MSBuild:Compile</Generator>
-	  </MauiXaml>
-	  <MauiXaml Update="Pages\RFC5389Page.xaml">
+	  <MauiXaml Update="Pages\NATCheckPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
 	  <MauiXaml Update="Pages\SettingPage.xaml">

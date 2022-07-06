@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:controls="clr-namespace:ETLab_MauiPlainPureMode.Controls"
+             xmlns:viewmodels="clr-namespace:ETLab_MauiPlainPureMode.ViewModels"
+             xmlns:converters="clr-namespace:ETLab_MauiPlainPureMode.Conveters"
+             x:Class="ETLab_MauiPlainPureMode.Pages.NATCheckPage"
+             Title="NATCheckPage">
+
+    <ContentPage.BindingContext>
+        <viewmodels:NATCheckViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <converters:BoolToControlTemplateConverter x:Key="BoolToControlTemplateConverter" />
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <StackLayout>
+            <Border Stroke="Gray"
+                    StrokeThickness="1"
+                    StrokeShape="RoundRectangle 5"
+                    Padding="10,0">
+                <Border.Content>
+                    <Picker x:Name="picker"
+                            VerticalOptions="CenterAndExpand"
+                            CharacterSpacing="1"
+                            Title="选择一个STUN Server"
+                            SelectedItem="{Binding Config.StunServer}"
+                            ItemsSource="{Binding STUNServers, Mode=OneWay}">
+                    </Picker>
+                </Border.Content>
+            </Border>
+            <Label Text="Proxy Mode" />
+            <StackLayout Orientation="Horizontal" RadioButtonGroup.GroupName="proxy" RadioButtonGroup.SelectedValue="{Binding NATCheckSetting.ProxyType}">
+                <RadioButton Value="NoProxy" Content="Don't Use Proxy" IsChecked="True" />
+                <RadioButton x:Name="socks5" Value="Socks5" Content="Socks5" IsChecked="False" />
+            </StackLayout>
+            <StackLayout IsVisible="{Binding Source={x:Reference socks5}, Path=IsChecked}">
+                <Label Text="Proxy Server" />
+                <Entry IsEnabled="False"
+                       Text="{Binding NATCheckSetting.ProxyServer}" />
+                <Label Text="Username" />
+                <Entry IsEnabled="False"
+                       Text="{Binding NATCheckSetting.ProxyUser}" />
+                <Label Text="Password" />
+                <Entry IsEnabled="False"
+                       Text="{Binding NATCheckSetting.ProxyPassword}" />
+            </StackLayout>
+            <ContentView ControlTemplate="{Binding Source={x:Reference socks5}, Path=IsChecked, Converter={StaticResource BoolToControlTemplateConverter}}"/>
+        </StackLayout>
+    </ScrollView>
+
+</ContentPage>
