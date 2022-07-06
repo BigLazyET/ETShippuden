@@ -13,5 +13,18 @@ namespace ETLab_MauiPlainPureMode.Models
         public string LocalIPEndPoint { get; set; }
 
         public string PublicIPEndPoint { get; set; }
+
+        private string _testX = "TestXXXX";
+        public string TestX
+        {
+            get
+            {
+                return _testX;
+            }
+            set
+            {
+                SetProperty(ref _testX, value);
+            }
+        }
     }
 }

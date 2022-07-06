@@ -5,6 +5,7 @@
              xmlns:viewmodels="clr-namespace:ETLab_MauiPlainPureMode.ViewModels"
              xmlns:converters="clr-namespace:ETLab_MauiPlainPureMode.Conveters"
              x:Class="ETLab_MauiPlainPureMode.Pages.NATCheckPage"
+             x:Name="natCheckPage"
              Title="NATCheckPage">
 
     <ContentPage.BindingContext>
@@ -13,6 +14,26 @@
 
     <ContentPage.Resources>
         <converters:BoolToControlTemplateConverter x:Key="BoolToControlTemplateConverter" />
+        <ControlTemplate x:Key="foo">
+            <StackLayout BindingContext="{Binding Source={RelativeSource TemplatedParent}}">
+                <Label Text="{Binding BindingContext.NATCheck3489Outcome.Test}" />
+                <Label Text="Foo" />
+                <Label Text="Foo" />
+                <Label Text="Foo" />
+                <Label Text="Foo" />
+                <Label Text="Foo" />
+            </StackLayout>
+        </ControlTemplate>
+        <ControlTemplate x:Key="bar">
+            <StackLayout>
+                <Label Text="{TemplateBinding BindingContext.NATCheck5780Outcome.TestX}" />
+                <Label Text="Bar" />
+                <Label Text="Bar" />
+                <Label Text="Bar" />
+                <Label Text="Bar" />
+                <Label Text="Bar" />
+            </StackLayout>
+        </ControlTemplate>
     </ContentPage.Resources>
 
     <ScrollView>
@@ -26,15 +47,22 @@
                             VerticalOptions="CenterAndExpand"
                             CharacterSpacing="1"
                             Title="选择一个STUN Server"
-                            SelectedItem="{Binding Config.StunServer}"
+                            SelectedItem="{Binding NATCheckSetting.StunServer}"
                             ItemsSource="{Binding STUNServers, Mode=OneWay}">
                     </Picker>
                 </Border.Content>
             </Border>
             <Label Text="Proxy Mode" />
-            <StackLayout Orientation="Horizontal" RadioButtonGroup.GroupName="proxy" RadioButtonGroup.SelectedValue="{Binding NATCheckSetting.ProxyType}">
-                <RadioButton Value="NoProxy" Content="Don't Use Proxy" IsChecked="True" />
-                <RadioButton x:Name="socks5" Value="Socks5" Content="Socks5" IsChecked="False" />
+            <StackLayout Orientation="Horizontal"
+                         RadioButtonGroup.GroupName="proxy"
+                         RadioButtonGroup.SelectedValue="{Binding NATCheckSetting.ProxyType}">
+                <RadioButton Value="NoProxy"
+                             Content="Don't Use Proxy"
+                             IsChecked="True" />
+                <RadioButton x:Name="socks5"
+                             Value="Socks5"
+                             Content="Socks5"
+                             IsChecked="False" />
             </StackLayout>
             <StackLayout IsVisible="{Binding Source={x:Reference socks5}, Path=IsChecked}">
                 <Label Text="Proxy Server" />
@@ -47,7 +75,11 @@
                 <Entry IsEnabled="False"
                        Text="{Binding NATCheckSetting.ProxyPassword}" />
             </StackLayout>
-            <ContentView ControlTemplate="{Binding Source={x:Reference socks5}, Path=IsChecked, Converter={StaticResource BoolToControlTemplateConverter}}"/>
+            <!--<ContentView ControlTemplate="{Binding Source={x:Reference socks5}, Path=IsChecked, Converter={StaticResource BoolToControlTemplateConverter}}">-->
+            <ContentView ControlTemplate="{StaticResource foo}">
+                <Button Text="测试"
+                        Command="{Binding CheckNATTypeCommand}" />
+            </ContentView>
         </StackLayout>
     </ScrollView>
 

@@ -19,21 +19,30 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public IEnumerable<string> STUNServers => Constants.STUNServers;
 
-        public NATCheckSetting NATCheckSetting { get; set; }
+        private NATCheckSetting _natCheckSetting;
+        public NATCheckSetting NATCheckSetting { get => _natCheckSetting; set => SetProperty(ref _natCheckSetting, value); }
 
-        public NATCheck3489Outcome NATCheck3489Outcome { get; set; }
+        private NATCheck3489Outcome _check3489Outcome;
+        public NATCheck3489Outcome NATCheck3489Outcome { get => _check3489Outcome; set => SetProperty(ref _check3489Outcome, value); }
 
-        public NATCheck5780Outcome NATCheck5780Outcome { get; set; }
+        private NATCheck5780Outcome _check5780Outcome;
+        public NATCheck5780Outcome NATCheck5780Outcome { get => _check5780Outcome; set => SetProperty(ref _check5780Outcome, value); }
 
-        public Command<CancellationToken> CheckNATTypeCommand { get; private set; }
+        public Command CheckNATTypeCommand { get; private set; }
 
         public NATCheckViewModel()
         {
-            CheckNATTypeCommand = new Command<CancellationToken>(CheckNATType);
+            NATCheckSetting = new NATCheckSetting();
+            NATCheck3489Outcome = new NATCheck3489Outcome();
+            NATCheck5780Outcome = new NATCheck5780Outcome();
+
+            CheckNATTypeCommand = new Command(CheckNATType);
         }
 
-        private async void CheckNATType(CancellationToken cancellationToken)
+        private async void CheckNATType()
         {
+            var cancellationToken = new CancellationTokenSource(TimeSpan.FromSeconds(3)).Token;
+
             //if (!StunServer.TryParse(Config.StunServer, out StunServer? stunServer))
             //    throw new InvalidOperationException("WRONG STUN Server");
             Verify.Operation(StunServer.TryParse(NATCheckSetting.StunServer, out StunServer? stunServer), @"WRONG STUN Server");

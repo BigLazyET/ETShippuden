@@ -19,6 +19,7 @@
         <Label Text="Public IPEndPoint" />
         <Entry IsEnabled="False"
                Text="{Binding NATCheck5780Outcome.PublicIPEndPoint}" />
+        <ContentPresenter />
     </StackLayout>
 
 </ContentView>
