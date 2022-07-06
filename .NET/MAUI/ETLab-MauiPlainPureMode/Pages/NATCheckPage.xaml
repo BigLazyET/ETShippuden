@@ -54,17 +54,15 @@
             </Border>
             <Label Text="Proxy Mode" />
             <StackLayout Orientation="Horizontal"
-                         RadioButtonGroup.GroupName="proxy"
-                         RadioButtonGroup.SelectedValue="{Binding NATCheckSetting.ProxyType}">
+                         RadioButtonGroup.GroupName="proxy">
                 <RadioButton Value="NoProxy"
                              Content="Don't Use Proxy"
-                             IsChecked="True" />
-                <RadioButton x:Name="socks5"
-                             Value="Socks5"
+                             CheckedChanged="RadioButton_CheckedChanged"/>
+                <RadioButton Value="Socks5"
                              Content="Socks5"
-                             IsChecked="False" />
+                             CheckedChanged="RadioButton_CheckedChanged"/>
             </StackLayout>
-            <StackLayout IsVisible="{Binding Source={x:Reference socks5}, Path=IsChecked}">
+            <!--<StackLayout IsVisible="{Binding Source={x:Reference socks5}, Path=IsChecked}">
                 <Label Text="Proxy Server" />
                 <Entry IsEnabled="False"
                        Text="{Binding NATCheckSetting.ProxyServer}" />
@@ -74,11 +72,28 @@
                 <Label Text="Password" />
                 <Entry IsEnabled="False"
                        Text="{Binding NATCheckSetting.ProxyPassword}" />
-            </StackLayout>
-            <!--<ContentView ControlTemplate="{Binding Source={x:Reference socks5}, Path=IsChecked, Converter={StaticResource BoolToControlTemplateConverter}}">-->
-            <ContentView ControlTemplate="{StaticResource foo}">
-                <Button Text="测试"
-                        Command="{Binding CheckNATTypeCommand}" />
+            </StackLayout>-->
+            <!--以下注释写法无法成功-->
+            <!--<ContentView ControlTemplate="{Binding Source={x:Reference socks5}, Path=IsChecked, 
+                Converter={StaticResource BoolToControlTemplateConverter},
+                ConverterParameter={x:Reference natCheckPage}}">-->
+            <ContentView x:Name="contentView">
+                <!--<ContentView.Triggers>
+                    <DataTrigger TargetType="ContentView"
+                                 Binding="{Binding IsSocks5Selected}"
+                                 Value="True">
+                        <Setter Property="ControlTemplate"
+                                Value="{DynamicResource bar}" />
+                    </DataTrigger>
+                    <DataTrigger TargetType="ContentView"
+                                 Binding="{Binding IsSocks5Selected}"
+                                 Value="False">
+                        <Setter Property="ControlTemplate"
+                                Value="{DynamicResource foo}" />
+                    </DataTrigger>
+                </ContentView.Triggers>-->
+                <!--<Button Text="测试"
+                        Command="{Binding CheckNATTypeCommand}" />-->
             </ContentView>
         </StackLayout>
     </ScrollView>

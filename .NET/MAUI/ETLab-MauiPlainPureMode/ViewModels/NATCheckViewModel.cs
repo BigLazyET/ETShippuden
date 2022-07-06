@@ -19,6 +19,9 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public IEnumerable<string> STUNServers => Constants.STUNServers;
 
+        private bool _isSocks5Selected = false;
+        public bool IsSocks5Selected { get => _isSocks5Selected; set => SetProperty(ref _isSocks5Selected, value); }
+
         private NATCheckSetting _natCheckSetting;
         public NATCheckSetting NATCheckSetting { get => _natCheckSetting; set => SetProperty(ref _natCheckSetting, value); }
 

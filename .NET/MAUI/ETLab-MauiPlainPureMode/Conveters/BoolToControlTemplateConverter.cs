@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using ETLab_MauiPlainPureMode.Pages;
+using System.Globalization;
 
 namespace ETLab_MauiPlainPureMode.Conveters
 {
@@ -7,14 +8,17 @@ namespace ETLab_MauiPlainPureMode.Conveters
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
             var socks5IsChecked = (bool)value;
+            var natCheckPage = parameter as NATCheckPage;
 
             if (socks5IsChecked)
             {
-                return (ControlTemplate)App.Current.Resources["RFC5780ControlTemplate"];
+                //return (ControlTemplate)App.Current.Resources["RFC5780ControlTemplate"];
+                return (ControlTemplate)natCheckPage.Resources["bar"];
             }
             else
             {
-                return (ControlTemplate)App.Current.Resources["RFC3489ControlTemplate"];
+                //return (ControlTemplate)App.Current.Resources["RFC3489ControlTemplate"];
+                return (ControlTemplate)natCheckPage.Resources["foo"];
             }
         }
 
