@@ -27,17 +27,17 @@
         <Label Text="NAT Type" Margin="0,15,0,5"/>
         <Border Stroke="Gray"
                 StrokeThickness="1"
-                StrokeShape="RoundRectangle 5"
+                StrokeShape="RoundRectangle 5" InputTransparent="True"
                 Padding="10,0">
-            <Entry IsEnabled="False"
+            <Entry IsEnabled="True"
                    Text="{Binding Path=NATCheck3489Outcome.NATTYPE}" />
         </Border>
         <Label Text="Local IPEndPoint" Margin="0,15,0,5"/>
         <Border Stroke="Gray"
                 StrokeThickness="1"
-                StrokeShape="RoundRectangle 5"
+                StrokeShape="RoundRectangle 5" InputTransparent="True"
                 Padding="10,0">
-            <Entry IsEnabled="False"
+            <Entry
                    Text="{Binding Path=NATCheck3489Outcome.LocalIPEndPoint}" />
         </Border>
         <Label Text="Public IPEndPoint"

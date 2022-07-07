@@ -2,13 +2,13 @@
 
 namespace STUN
 {
-    public class HostnameEndpoint
+    public class HostNameEndPoint
     {
         public string Hostname { get; init; }
 
         public ushort Port { get; init; }
 
-        public static bool TryParse(string s, [NotNullWhen(true)] out HostnameEndpoint? result, ushort defaultPort = 0)
+        public static bool TryParse(string s, [NotNullWhen(true)] out HostNameEndPoint? result, ushort defaultPort = 0)
         {
             result = null;
             if (string.IsNullOrWhiteSpace(s))
@@ -40,8 +40,8 @@ namespace STUN
             // if (hostLen != s.Length && !ushort.TryParse(s[..(hostLen + 1)], out defaultPort))    // 新开辟空间
             if (hostLen != s.Length && !ushort.TryParse(s.AsSpan(hostLen + 1), out defaultPort))    // 引用
                 return false;
-
-            result = new HostnameEndpoint { Hostname = host, Port = defaultPort };
+            
+            result = new HostNameEndPoint { Hostname = host, Port = defaultPort };
             return true;
         }
     }
