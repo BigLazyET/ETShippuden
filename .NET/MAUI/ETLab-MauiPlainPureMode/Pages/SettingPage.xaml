@@ -4,9 +4,23 @@
              x:Class="ETLab_MauiPlainPureMode.Pages.SettingPage"
              Title="设置页">
     <VerticalStackLayout>
-        <Label 
-            Text="This is setting page"
-            VerticalOptions="Center" 
-            HorizontalOptions="Center" />
+        <StackLayout Orientation="Horizontal"
+                     RadioButtonGroup.GroupName="proxy">
+            <RadioButton Value="NoProxy"
+                         Content="Don't Use Proxy" />
+            <RadioButton Value="Socks5"
+                         Content="Socks5" />
+        </StackLayout>
+        <StackLayout IsVisible="{Binding IsSocks5Selected}">
+            <Label Text="Proxy Server" />
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheckSetting.ProxyServer}" />
+            <Label Text="Username" />
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheckSetting.ProxyUser}" />
+            <Label Text="Password" />
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheckSetting.ProxyPassword}" />
+        </StackLayout>
     </VerticalStackLayout>
 </ContentPage>

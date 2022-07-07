@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewModel="clr-namespace:ETLab_MauiPlainPureMode.ViewModels"
+             xmlns:converter="clr-namespace:ETLab_MauiPlainPureMode.Conveters"
+             x:Class="ETLab_MauiPlainPureMode.Pages.RFC3489Page">
+
+    <ContentPage.BindingContext>
+        <viewModel:RFC3489ViewModel />
+    </ContentPage.BindingContext>
+
+    <VerticalStackLayout Margin="10">
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Border.Content>
+                <Picker x:Name="picker"
+                        VerticalOptions="CenterAndExpand"
+                        CharacterSpacing="1"
+                        Title="选择一个STUN Server"
+                        SelectedItem="{Binding NATCheckSetting.StunServer}"
+                        ItemsSource="{Binding STUNServers, Mode=OneWay}">
+                </Picker>
+            </Border.Content>
+        </Border>
+        <Label Text="NAT Type" Margin="0,15,0,5"/>
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding Path=NATCheck3489Outcome.NATTYPE}" />
+        </Border>
+        <Label Text="Local IPEndPoint" Margin="0,15,0,5"/>
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding Path=NATCheck3489Outcome.LocalIPEndPoint}" />
+        </Border>
+        <Label Text="Public IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding Path=NATCheck3489Outcome.PublicIPEndPoint}" />
+        </Border>
+        <Button Text="Test" Margin="0,20,0,0"
+                VerticalOptions="EndAndExpand" />
+    </VerticalStackLayout>
+</ContentPage>

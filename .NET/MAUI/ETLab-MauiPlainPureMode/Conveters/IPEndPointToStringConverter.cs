@@ -7,10 +7,9 @@ namespace ETLab_MauiPlainPureMode.Conveters
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
         {
-            var endpoint = value as IPEndPoint;
-            if (endpoint != null)
-                return endpoint.ToString();
-            return new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0).ToString();
+            if (value is IPEndPoint endPoint && endPoint is not null)
+                return endPoint.ToString();
+            return null;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)

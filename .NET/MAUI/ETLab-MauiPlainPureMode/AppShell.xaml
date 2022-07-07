@@ -7,57 +7,45 @@
        FlyoutIcon="hanbaobao.svg"
        FlyoutBehavior="Flyout"
        FlyoutHeaderBehavior="CollapseOnScroll">
-    <!--CurrentItem="{x:Reference natCheck}"-->
 
-    <!--<Shell.FlyoutHeader>
-        <Label HorizontalOptions="CenterAndExpand"
-               VerticalOptions="CenterAndExpand"
-               Text="Flyout Header" />
-    </Shell.FlyoutHeader>-->
+    <!--<Shell.FlyoutHeader>-->
 
-    <FlyoutItem Title="主页"
+    <FlyoutItem Title="主页" Route="main"
                 Icon="bingtanghulu.svg">
-        <Tab>
-            <ShellContent ContentTemplate="{DataTemplate local:MainPage}" />
+        <Tab Route="mainTab">
+            <ShellContent Route="pageList" ContentTemplate="{DataTemplate local:MainPage}" />
         </Tab>
     </FlyoutItem>
-    <!--<FlyoutItem FlyoutDisplayOptions="AsMultipleItems">
+    <FlyoutItem FlyoutDisplayOptions="AsMultipleItems" Route="nat">
         <Tab Title="NAT类型分析"
-             Icon="zhouzi.png">
-            <ShellContent Title="RFC3489"
+             Icon="zhouzi.png" Route="stun">
+            <ShellContent Title="RFC3489" Route="rfc3489"
                           ContentTemplate="{DataTemplate page:RFC3489Page}" />
-            <ShellContent Title="RFC5389"
+            <ShellContent Title="RFC5389" Route="rfc5389"
                           ContentTemplate="{DataTemplate page:RFC5389Page}" />
-        </Tab>
-        <Tab Title="设置"
-             Icon="susi.svg">
-            <ShellContent Title="Setting"
+            <ShellContent Title="Setting" Route="natSeting"
                           ContentTemplate="{DataTemplate page:SettingPage}" />
         </Tab>
-    </FlyoutItem>-->
+    </FlyoutItem>
     <!--<FlyoutItem Title="NAT" FlyoutDisplayOptions="AsMultipleItems">
         <ShellContent Title="RFC3489" Icon="zhouzi.png"
                       ContentTemplate="{DataTemplate page:RFC3489Page}" />
         <ShellContent Title="RFC5389" Icon="wine.png"
                       ContentTemplate="{DataTemplate page:RFC5389Page}" />
     </FlyoutItem>-->
-    <FlyoutItem Title="NATCheck" Icon="wine.png">
+    <!--<FlyoutItem Title="NATCheck" Icon="wine.png">
         <ShellContent x:Name="natCheck" Title="NATCheck"
                       Icon="zhouzi.png"
                       ContentTemplate="{DataTemplate page:NATCheckPage}" />
-    </FlyoutItem>
-    <ShellContent Title="Setting"
+    </FlyoutItem>-->
+    <!--<ShellContent Title="Setting"
                   Icon="susi.svg"
-                  ContentTemplate="{DataTemplate page:SettingPage}" />
+                  ContentTemplate="{DataTemplate page:SettingPage}" />-->
     <ShellContent Title="About"
-                  Icon="tea.png"
+                  Icon="tea.png" Route="about"
                   ContentTemplate="{DataTemplate page:AboutPage}" />
     <MenuItem Text="help"
               IconImageSource="water.svg" />
 
-    <!--<Shell.FlyoutFooter>
-        <Label HorizontalOptions="CenterAndExpand"
-               VerticalOptions="CenterAndExpand"
-               Text="Flyout Footer" />
-    </Shell.FlyoutFooter>-->
+    <!--<Shell.FlyoutFooter>-->
 </Shell>

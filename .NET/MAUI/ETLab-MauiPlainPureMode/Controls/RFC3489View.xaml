@@ -8,17 +8,19 @@
         <converters:IPEndPointToStringConverter x:Key="IPEndPointToStringConverter" />
     </StackLayout.Resources>
     
-    <StackLayout>
-        <Label Text="NAT Type" />
-        <Entry IsEnabled="False"
-               Text="{TemplateBinding Path=NATCheck3489Outcome.NATTYPE}"/>
-        <Label Text="Local IPEndPoint" />
-        <Entry IsEnabled="False"
-               Text="{TemplateBinding Path=NATCheck3489Outcome.Test}"/>
-        <Label Text="Public IPEndPoint" />
-        <Entry IsEnabled="False"
-               Text="{TemplateBinding Path=NATCheck3489Outcome.PublicIPEndPoint, Converter={StaticResource IPEndPointToStringConverter}}"/>
-        <ContentPresenter />
-    </StackLayout>
+    <ScrollView>
+        <StackLayout>
+            <ContentPresenter />
+            <Label Text="NAT Type" />
+            <Entry IsEnabled="False"
+                   Text="{TemplateBinding Path=NATCheck3489Outcome.NATTYPE}" />
+            <Label Text="Local IPEndPoint" />
+            <Entry IsEnabled="False"
+                   Text="{TemplateBinding Path=NATCheck3489Outcome.Test}" />
+            <Label Text="Public IPEndPoint" />
+            <Entry IsEnabled="False"
+                   Text="{TemplateBinding Path=NATCheck3489Outcome.PublicIPEndPoint, Converter={StaticResource IPEndPointToStringConverter}}" />
+        </StackLayout>
+    </ScrollView>
     
 </StackLayout>
