@@ -7,7 +7,7 @@ public partial class App : Application
     /// <summary>
     /// 共享设置ViewModel
     /// </summary>
-    public static SettingViewModel SettingViewModel { get; private set; }
+    public static ProxySettingViewModel ProxySettingViewModel { get; private set; }
 
     public App()
     {
@@ -15,6 +15,6 @@ public partial class App : Application
 
         MainPage = new AppShell();
 
-        SettingViewModel = new SettingViewModel();
+        ProxySettingViewModel = new ProxySettingViewModel();
     }
 }

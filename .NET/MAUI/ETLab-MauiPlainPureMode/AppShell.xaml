@@ -24,7 +24,7 @@
             <ShellContent Title="RFC5389" Route="rfc5389"
                           ContentTemplate="{DataTemplate page:RFC5389Page}" />
             <ShellContent Title="Setting" Route="natSeting"
-                          ContentTemplate="{DataTemplate page:SettingPage}" />
+                          ContentTemplate="{DataTemplate page:ProxySettingPage}" />
         </Tab>
     </FlyoutItem>
     <!--<FlyoutItem Title="NAT" FlyoutDisplayOptions="AsMultipleItems">

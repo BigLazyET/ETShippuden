@@ -18,6 +18,7 @@ namespace STUN.Messages
 
         public StunMessage5389()
         {
+            Header = new StunMessageHeader();
             RandomNumberGenerator.Fill(Header.TransactionId);
         }
 

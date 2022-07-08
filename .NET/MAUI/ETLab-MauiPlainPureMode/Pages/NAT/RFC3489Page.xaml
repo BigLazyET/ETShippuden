@@ -50,6 +50,7 @@
                    Text="{Binding Path=NATCheck3489Outcome.PublicIPEndPoint}" />
         </Border>
         <Button Text="Test" Margin="0,20,0,0"
-                VerticalOptions="EndAndExpand" />
+                VerticalOptions="EndAndExpand"
+                Command="{Binding CheckNATTypeCommand}"/>
     </VerticalStackLayout>
 </ContentPage>
