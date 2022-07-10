@@ -25,6 +25,11 @@ namespace STUN.Messages
     {
         public StunMessageType StunMessageType { get; set; } = StunMessageType.BindingRequest;
 
+        /// <summary>
+        /// RFC3489和RFC5389的不同之处
+        /// 前者的magic cookie是transaction id的一部分
+        /// 后者的magic cookie则必须包含0x2112A442这部分
+        /// </summary>
         public uint MagicCookie { get; set; } = 0x2112A442;
 
         public byte[] TransactionId { get; set; } = new byte[12];    // 随机数填充即可

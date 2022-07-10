@@ -1,26 +1,53 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:converter="clr-namespace:ETLab_MauiPlainPureMode.Conveters"
              x:Class="ETLab_MauiPlainPureMode.Pages.ProxySettingPage"
              Title="ProxySettingPage">
-    <VerticalStackLayout>
-        <StackLayout Orientation="Horizontal"
-                     RadioButtonGroup.GroupName="proxy">
-            <RadioButton Value="NoProxy"
-                         Content="Don't Use Proxy" />
+
+    <ContentPage.Resources>
+        <converter:ProxyTypeToStringConverter x:Key="ProxyTypeToStringConverter" />
+    </ContentPage.Resources>
+    
+    <VerticalStackLayout Margin="10">
+        <Label Text="Proxy Mode"
+               Margin="0,0,0,5" />
+        <StackLayout Orientation="Horizontal" RadioButtonGroup.GroupName="proxyMode"
+                     RadioButtonGroup.SelectedValue="{Binding ProxyType, Converter={StaticResource ProxyTypeToStringConverter}}">
+            <RadioButton Value="Plain"
+                         Content="Don't Use Proxy"
+                         IsChecked="True"
+                         CheckedChanged="RadioButton_CheckedChanged" />
             <RadioButton Value="Socks5"
-                         Content="Socks5" />
+                         Content="Socks5"
+                         CheckedChanged="RadioButton_CheckedChanged" />
         </StackLayout>
-        <StackLayout IsVisible="{Binding IsSocks5Selected}">
-            <Label Text="Proxy Server" />
-            <Entry IsEnabled="False"
-                   Text="{Binding NATCheckSetting.ProxyServer}" />
-            <Label Text="Username" />
-            <Entry IsEnabled="False"
-                   Text="{Binding NATCheckSetting.ProxyUser}" />
-            <Label Text="Password" />
-            <Entry IsEnabled="False"
-                   Text="{Binding NATCheckSetting.ProxyPassword}" />
-        </StackLayout>
+        <Label Text="Proxy Server"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry Text="{Binding ProxyServer}"
+                   IsEnabled="{Binding IsSocks5Proxy}" />
+        </Border>
+        <Label Text="Proxy Username"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry Text="{Binding ProxyUsername}"
+                   IsEnabled="{Binding IsSocks5Proxy}" />
+        </Border>
+        <Label Text="Proxy Password"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Entry Text="{Binding ProxyPassword}"
+                   IsEnabled="{Binding IsSocks5Proxy}" />
+        </Border>
     </VerticalStackLayout>
 </ContentPage>

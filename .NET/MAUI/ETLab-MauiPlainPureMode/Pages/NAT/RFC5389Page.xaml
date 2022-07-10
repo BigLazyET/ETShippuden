@@ -9,7 +9,7 @@
         <viewModel:RFC5389ViewModel />
     </ContentPage.BindingContext>
 
-    <VerticalStackLayout>
+    <VerticalStackLayout Margin="10">
         <Border Stroke="Gray"
                 StrokeThickness="1"
                 StrokeShape="RoundRectangle 5"
@@ -19,8 +19,8 @@
                         VerticalOptions="CenterAndExpand"
                         CharacterSpacing="1"
                         Title="选择一个STUN Server"
-                        SelectedItem="{Binding NATCheckSetting.StunServer}"
-                        ItemsSource="{Binding STUNServers, Mode=OneWay}">
+                        SelectedItem="{Binding SelectedStunServer}"
+                        ItemsSource="{Binding STUNServers}">
                 </Picker>
             </Border.Content>
         </Border>

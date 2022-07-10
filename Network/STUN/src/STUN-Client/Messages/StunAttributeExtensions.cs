@@ -35,13 +35,25 @@ namespace STUN.Messages
 
         public static IPEndPoint? GetIPEndPointFromChangedAddressAttribute(this StunMessage5389 stunMessage)
         {
-            var changedAddressAttribute = stunMessage.Attributes.First(a => a.StunAttributeType == StunAttributeType.ChangedAddress);
+            var changedAddressAttribute = stunMessage.Attributes.FirstOrDefault(a => a.StunAttributeType == StunAttributeType.ChangedAddress);
 
             if (changedAddressAttribute is null)
                 return null;
 
             var changedAddressAttributeValue = (ChangedAddressStunAttributeValue)changedAddressAttribute.StunAttributeValue;
             return new IPEndPoint(changedAddressAttributeValue.Address!, changedAddressAttributeValue.Port);
+        }
+
+        public static IPEndPoint? GetIPEndPointFromXorMappedAddressAttribute(this StunMessage5389 stunMessage)
+        {
+            var xorMappedAddressAttribute = stunMessage.Attributes.FirstOrDefault(a => a.StunAttributeType == StunAttributeType.XorMappedAddress) ??
+                stunMessage.Attributes.FirstOrDefault(a => a.StunAttributeType == StunAttributeType.MappedAddress);
+
+            if (xorMappedAddressAttribute is null)
+                return null;
+
+            var xorMappedAddressAttributeValue = (XorMappedAddressStunAttributeValue)xorMappedAddressAttribute.StunAttributeValue;
+            return new IPEndPoint(xorMappedAddressAttributeValue.Address!, xorMappedAddressAttributeValue.Port);
         }
     }
 }

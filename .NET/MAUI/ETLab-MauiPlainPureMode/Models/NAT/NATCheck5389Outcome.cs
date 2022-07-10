@@ -1,4 +1,5 @@
 ﻿using ETLab_MauiPlainPureMode.ViewModels;
+using System.Net;
 
 namespace ETLab_MauiPlainPureMode.Models
 {
@@ -10,8 +11,8 @@ namespace ETLab_MauiPlainPureMode.Models
 
         public string FilteringBehavior { get; set; }
 
-        public string LocalIPEndPoint { get; set; }
+        public IPEndPoint LocalIPEndPoint { get; set; }
 
-        public string PublicIPEndPoint { get; set; }
+        public IPEndPoint PublicIPEndPoint { get; set; }
     }
 }

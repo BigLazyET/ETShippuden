@@ -4,12 +4,40 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 {
     public class ProxySettingViewModel : BaseViewModel
     {
-        public string ProxyServer { get; set; } = "127.0.0.1:1080";
+        private bool _isSocks5Proxy;
+        private string _proxyServer = "127.0.0.1:1080";
+        private string _proxyUsername;
+        private string _proxyPassword;
+        private ProxyType _proxyType = ProxyType.Plain;
 
-        public string ProxyUsername { get; set; }
+        public string ProxyServer
+        {
+            get { return _proxyServer; }
+            set { SetProperty(ref _proxyServer, value); }
+        }
 
-        public string ProxyPassword { get; set; }
+        public string ProxyUsername
+        {
+            get { return _proxyUsername; }
+            set { SetProperty(ref _proxyUsername, value); }
+        }
 
-        public ProxyType ProxyType { get; set; } = ProxyType.Plain;
+        public string ProxyPassword
+        {
+            get { return _proxyPassword; }
+            set { SetProperty(ref _proxyPassword, value); }
+        }
+
+        public ProxyType ProxyType
+        {
+            get { return _proxyType; }
+            set { SetProperty(ref _proxyType, value); }
+        }
+
+        public bool IsSocks5Proxy
+        {
+            get { return _isSocks5Proxy; }
+            set { SetProperty(ref _isSocks5Proxy, value); }
+        }
     }
 }
