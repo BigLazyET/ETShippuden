@@ -37,7 +37,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         private async void CheckNATType()
         {
-            if(string.IsNullOrEmpty(SelectedStunServer))
+            if (string.IsNullOrEmpty(SelectedStunServer))
             {
                 await Application.Current.MainPage.DisplayAlert("警告", "请选择STUN Server", "好的");
                 return;

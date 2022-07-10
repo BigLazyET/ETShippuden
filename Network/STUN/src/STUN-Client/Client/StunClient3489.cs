@@ -86,7 +86,7 @@ namespace STUN.Client
 
             // Step 2：send request to server => messageType: BindingRequest; attributeType：ChangeRequest
             var stepResponse2 = await TestStep2Async(serverAnotherIPEndpoint, cancellationToken);
-            var mappedAddress2 = stepResponse2.stunMessage.GetIPEndPointFromMappedAddressAttribute();
+            var mappedAddress2 = stepResponse2?.stunMessage.GetIPEndPointFromMappedAddressAttribute();
 
             if (stepResponse2 != null)
             {
