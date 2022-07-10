@@ -11,16 +11,10 @@ namespace STUN.Messages
     public class StunMessage5389
     {
         // Start with a 20-byte header
-        public StunMessageHeader Header { get; set; }
+        public StunMessageHeader Header { get; set; } = new StunMessageHeader();
 
         // Then followed by zero or more Attributes
         public IEnumerable<StunAttribute> Attributes { get; set; } = Array.Empty<StunAttribute>();
-
-        public StunMessage5389()
-        {
-            Header = new StunMessageHeader();
-            RandomNumberGenerator.Fill(Header.TransactionId);
-        }
 
         public int WriteTo(Span<byte> buffer)
         {

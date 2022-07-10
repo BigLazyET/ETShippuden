@@ -1,4 +1,5 @@
 ﻿using STUN.Enums;
+using System.Security.Cryptography;
 
 namespace STUN.Messages
 {
@@ -26,8 +27,13 @@ namespace STUN.Messages
 
         public uint MagicCookie { get; set; } = 0x2112A442;
 
-        public byte[] TransactionId { get; } = new byte[12];    // 随机数填充即可
+        public byte[] TransactionId { get; set; } = new byte[12];    // 随机数填充即可
 
         public int MessageLength { get; set; }
+
+        public StunMessageHeader()
+        {
+            RandomNumberGenerator.Fill(TransactionId);
+        }
     }
 }

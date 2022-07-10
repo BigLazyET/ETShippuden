@@ -23,7 +23,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public IEnumerable<string> STUNServers => Constants.STUNServers;
 
-        public NATCheck3489Outcome NATCheck3489Outcome => new NATCheck3489Outcome();
+        public NATCheck3489Outcome NATCheck3489Outcome { get; set; }
 
         public Command CheckNATTypeCommand { get; private set; }
 
@@ -31,17 +31,24 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public RFC3489ViewModel()
         {
+            NATCheck3489Outcome = new NATCheck3489Outcome();
             CheckNATTypeCommand = new Command(CheckNATType);
         }
 
         private async void CheckNATType()
         {
+            if(string.IsNullOrEmpty(SelectedStunServer))
+            {
+                await Application.Current.MainPage.DisplayAlert("警告", "请选择STUN Server", "好的");
+                return;
+            }
+
+            var cancellationToken = new CancellationTokenSource().Token;
+
             var proxyServer = _proxySetting.ProxyServer;
             var proxyUsername = _proxySetting.ProxyUsername;
             var proxyPassword = _proxySetting.ProxyPassword;
-            var proxyType = Enum.Parse<ProxyType>(_proxySetting.ProxyType);
-
-            var cancellationToken = new CancellationToken(false);
+            var proxyType = _proxySetting.ProxyType;
 
             Verify.Operation(HostNameEndPoint.TryParse(proxyServer, out HostNameEndPoint? proxyHostNameEndPoint), "Unknown proxy address");
             Socks5CreateOption sock5Option = new()

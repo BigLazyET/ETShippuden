@@ -1,4 +1,6 @@
-﻿namespace ETLab_MauiPlainPureMode.ViewModels
+﻿using STUN.Enums;
+
+namespace ETLab_MauiPlainPureMode.ViewModels
 {
     public class ProxySettingViewModel : BaseViewModel
     {
@@ -8,6 +10,6 @@
 
         public string ProxyPassword { get; set; }
 
-        public string ProxyType { get; set; } = STUN.Enums.ProxyType.Plain.ToString();
+        public ProxyType ProxyType { get; set; } = ProxyType.Plain;
     }
 }

@@ -21,7 +21,7 @@ namespace STUN.Client
 
         public StunClient3489(IPEndPoint remoteEndPoint, IPEndPoint localEndPoint, IUdpProxy? udpProxy = null)
         {
-            this._udpProxy = udpProxy ?? new NoneUdpProxy(localEndPoint);
+            _udpProxy = udpProxy ?? new NoneUdpProxy(localEndPoint);
             _remoteEndPoint = remoteEndPoint;
             ClassicStunResult.LocalEndPoint = localEndPoint;
         }
@@ -253,7 +253,7 @@ namespace STUN.Client
                 var buffer = memoryOwner.Memory;
                 var length = sendMessage.WriteTo(buffer.Span);
 
-                await _udpProxy.SendToAsync(buffer[..length], SocketFlags.None, remote, cancellationToken);
+                var bytesSendLen = await _udpProxy.SendToAsync(buffer[..length], SocketFlags.None, remote, cancellationToken);
 
                 using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 cts.CancelAfter(ReceiveTimeout);
