@@ -2,17 +2,9 @@
 using STUN.Enums;
 using STUN.Messages;
 using STUN.Proxy;
-using System;
-using System.Buffers;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Net;
-using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace STUN.Client
 {
@@ -83,67 +75,19 @@ namespace STUN.Client
             {
                 StunResult5389.BindingTestResult = BindingTestResult.Fail;
                 return;
-            }  
+            }
             else if (stunServerMappedIPEndPoint is null)
             {
                 StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
                 return;
             }
-            if(!HasValidOtherAddress(stunServerAnotherIPEndPoint))
+            if (!HasValidOtherAddress(stunServerAnotherIPEndPoint))
             {
                 StunResult5389.FilteringBehavior = FilteringBehavior.UnSupportedServer;
                 return;
             }
 
-            
-        }
 
-        private async ValueTask<StunResponse> BindingRequestAsync(IPEndPoint remoteEndPoint, IPEndPoint receiveEndPoint, CancellationToken cancellationToken)
-        {
-            var request = new StunMessage5389
-            {
-                Header = new StunMessageHeader { StunMessageType = Enums.StunMessageType.BindingRequest }
-            };
-            var stunResponse = await RequestAsync(request, remoteEndPoint, receiveEndPoint, cancellationToken);
-            return stunResponse;
-        }
-
-        private async ValueTask<StunResponse> ChangeRequestAsync(IPEndPoint remoteEndPoint, IPEndPoint receiveEndPoint, bool changeIp, bool changePort, CancellationToken cancellationToken)
-        {
-            var request = new StunMessage5389
-            {
-                Header = new StunMessageHeader { StunMessageType = StunMessageType.BindingRequest },
-                Attributes = new[] { StunAttributeExtensions.BuildChangeRequest(changeIp, changePort) }
-            };
-            var stunResponse = await RequestAsync(request, remoteEndPoint, receiveEndPoint, cancellationToken);
-            return stunResponse;
-        }
-
-        private async ValueTask<StunResponse> RequestAsync(StunMessage5389 requestMessage, IPEndPoint remoteEndPoint, IPEndPoint receiveEndPoint, CancellationToken cancellationToken)
-        {
-            try
-            {
-                using var memoryOwner = MemoryPool<byte>.Shared.Rent(0x10000);  // 16^4 = 2^16 bytes
-                var buffer = memoryOwner.Memory;
-                var writeLen = requestMessage.WriteTo(buffer.Span);
-
-                var sendLen = await _udpProxy.SendToAsync(buffer[..writeLen], SocketFlags.None, remoteEndPoint, cancellationToken);
-
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(ReceiveTimeout);
-                var response = await _udpProxy.ReceiveMessageFromAsync(buffer, SocketFlags.None, receiveEndPoint, cts.Token);
-
-                StunMessage5389 stunMessage5389 = new();
-                if (stunMessage5389.TryParse(buffer.Span[..response.ReceivedBytes]) && stunMessage5389.IsSameTransaction(requestMessage))
-                {
-                    return new StunResponse(stunMessage5389, (IPEndPoint)response.RemoteEndPoint, response.PacketInformation.Address);
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine($"STUN Requst Error: {ex.Message}");
-            }
-            return default;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
