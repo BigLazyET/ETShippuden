@@ -24,20 +24,59 @@
                 </Picker>
             </Border.Content>
         </Border>
-        <Label Text="Binding Test" />
-        <Entry IsEnabled="False"
-               Text="{Binding NATCheck5780Outcome.BindingTest}" />
-        <Label Text="Mapping Behavior" />
-        <Entry IsEnabled="False"
-               Text="{Binding NATCheck5780Outcome.MappingBehavior}" />
-        <Label Text="Filtering Behavior" />
-        <Entry IsEnabled="False"
-               Text="{Binding NATCheck5780Outcome.FilteringBehavior}" />
-        <Label Text="Local IPEndPoint" />
-        <Entry IsEnabled="False"
-               Text="{Binding NATCheck5780Outcome.LocalIPEndPoint}" />
-        <Label Text="Public IPEndPoint" />
-        <Entry IsEnabled="False"
-               Text="{Binding NATCheck5780Outcome.PublicIPEndPoint}" />
+        <Label Text="Binding Test"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheck5780Outcome.BindingTest}" />
+        </Border>
+        <Label Text="Mapping Behavior"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheck5780Outcome.MappingBehavior}" />
+        </Border>
+        <Label Text="Filtering Behavior"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheck5780Outcome.FilteringBehavior}" />
+        </Border>
+        <Label Text="Local IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheck5780Outcome.LocalIPEndPoint}" />
+        </Border>
+        <Label Text="Public IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NATCheck5780Outcome.PublicIPEndPoint}" />
+        </Border>
+        <Button Text="Test"
+                Margin="0,20,0,0"
+                VerticalOptions="EndAndExpand"
+                Command="{Binding CheckNATTypeCommand}" />
     </VerticalStackLayout>
 </ContentPage>
