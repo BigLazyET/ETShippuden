@@ -43,12 +43,12 @@ exporters:
     path: /data/logs/collectmetric.json
 
   otlp:
-    endpoint: localhost:4316
+    endpoint: localhost:4317
     tls:
       insecure: true
 
   otlphttp:
-    endpoint: http://localhost:4315
+    endpoint: http://localhost:4318
 
 service:
   pipelines:

@@ -1,5 +1,8 @@
 FROM hub.17usoft.com/dotnet/runtime:6.0
 
+RUN rm -rf /etc/supervisor/* \
+    && rm -f /opt/otel/config.yaml
+
 ENV DAOKEAPPUK=opentelemetry.collector.test
 ENV DAOKEENVTYPE=qa
 ENV DAOKEENV=qa
