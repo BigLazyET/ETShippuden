@@ -27,6 +27,8 @@ exporters:
   logging/info:
     loglevel: info
 
+  file:
+    path: /collectmetric.json
 #  otlp:
 #    endpoint: otelcol:4317
 
@@ -86,4 +88,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [logging/info, prometheusremotewrite]
+      exporters: [logging/debug, file]

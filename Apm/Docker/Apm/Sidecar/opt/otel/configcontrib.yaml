@@ -1,6 +1,9 @@
 receivers:
   dotnet_diagnostics:
     pid: $DOTNETPID
+    protocols:
+      grpc:
+        endpoint: "localhost:66666"
 #   otlp:
 #     protocols:
 #       grpc:
@@ -8,10 +11,10 @@ receivers:
 # #        endpoint: /tmp/grpc_otlp.sock
 
   # Dummy receiver that's never used, because a pipeline is required to have one.
-  # otlp/dummy:
-  #   protocols:
-  #     grpc:
-  #       endpoint: "localhost:65530"
+  otlp/dummy:
+    protocols:
+      grpc:
+        endpoint: "localhost:65530"
 
 processors:
   memory_limiter:
@@ -24,14 +27,16 @@ processors:
     timeout: 500ms
     send_batch_max_size: 8192
 
-  # spanmetrics:
-  #   metrics_exporter: otlp/spanmetrics
-  #   latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
-  #   dimensions:
-  #     - name: host.name
-  #       default: "${INSIP}"
-  #     - name: deployment.environment
-  #       default: "${DAOKEENV}"
+  metrics:
+    metrics_exporter: dotnet_diagnostic/metrics
+    latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
+    dimensions:
+      - name: host.name
+        default: "${INSIP}"
+      - name: deployment.environment
+        default: "${DAOKEENV}"
+      - name: service.name
+        default: "${DAOKEAPPUK}"
 
 exporters:
   logging:
@@ -50,6 +55,11 @@ exporters:
   otlphttp:
     endpoint: http://localhost:4318
 
+  dotnet_diagnostic/metrics:
+    endpoint: localhost:66666
+    tls:
+      insecure: true
+
 service:
   pipelines:
     metrics:
@@ -57,6 +67,9 @@ service:
       # processors: [memory_limiter, spanmetrics, tail_sampling, batch]
       processors: [memory_limiter, batch]
       exporters: [ logging/info, file, otlp, otlphttp ]
+    metrics/metrics:
+      receivers: [otlp/dummy]
+      exporters: [logging, dotnet_diagnostic/metrics]
   telemetry:
     metrics:
       address: 0.0.0.0:8889
