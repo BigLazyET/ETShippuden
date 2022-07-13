@@ -1,0 +1,68 @@
+receivers:
+  dotnet_diagnostics:
+    pid: $DOTNETPID
+#   otlp:
+#     protocols:
+#       grpc:
+# #        transport: unix
+# #        endpoint: /tmp/grpc_otlp.sock
+
+  # Dummy receiver that's never used, because a pipeline is required to have one.
+  # otlp/dummy:
+  #   protocols:
+  #     grpc:
+  #       endpoint: "localhost:65530"
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 500
+    spike_limit_mib: 100
+
+  batch:
+    send_batch_size: 1024
+    timeout: 500ms
+    send_batch_max_size: 8192
+
+  # spanmetrics:
+  #   metrics_exporter: otlp/spanmetrics
+  #   latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
+  #   dimensions:
+  #     - name: host.name
+  #       default: "${INSIP}"
+  #     - name: deployment.environment
+  #       default: "${DAOKEENV}"
+
+exporters:
+  logging:
+    loglevel: warn
+  logging/info:
+    loglevel: info
+
+  file:
+    path: /data/logs/collectmetric.json
+
+  otlp:
+    endpoint: localhost:4316
+    tls:
+      insecure: true
+
+  otlphttp:
+    endpoint: http://localhost:4315
+
+service:
+  pipelines:
+    metrics:
+      receivers: [ dotnet_diagnostics ]
+      # processors: [memory_limiter, spanmetrics, tail_sampling, batch]
+      processors: [memory_limiter, batch]
+      exporters: [ logging/info, file, otlp, otlphttp ]
+  telemetry:
+    metrics:
+      address: 0.0.0.0:8889
+
+    # The exporter name must match the metrics_exporter name.
+    # The receiver is just a dummy and never used; added to pass validation requiring at least one receiver in a pipeline.
+    # metrics/spanmetrics:
+    #   receivers: [otlp/dummy]
+    #   exporters: [logging, otlp/spanmetrics]

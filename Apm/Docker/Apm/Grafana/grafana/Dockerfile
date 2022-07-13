@@ -1,5 +1,5 @@
-FROM grafana/grafana:latest
+FROM grafana/grafana
 
-COPY ./ /etc/grafana/
+COPY ./grafana.ini /etc/grafana/
 
 RUN grafana-cli plugins install novatec-sdg-panel
