@@ -48,3 +48,4 @@
 *.sh eol=lf
 apm/docker/apm/agent/opt/otel/otelcolcontrib filter=lfs diff=lfs merge=lfs -text
 Apm/Docker/Apm/Sidecar/opt/otel/otelcolcontrib filter=lfs diff=lfs merge=lfs -text
+Apm/Docker/Apm/Agent/opt/otel/otelcol filter=lfs diff=lfs merge=lfs -text
