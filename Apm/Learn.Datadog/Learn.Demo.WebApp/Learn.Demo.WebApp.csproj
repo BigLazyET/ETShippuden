@@ -6,9 +6,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <PackageReference Include="Flight.Diagnostics.Apm" Version="6.2.0" />
     <PackageReference Include="TongCheng.Extensions.Hosting" Version="5.0.2" />
-  </ItemGroup>
+  </ItemGroup>-->
 
 </Project>

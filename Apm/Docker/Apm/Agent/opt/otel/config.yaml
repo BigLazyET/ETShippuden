@@ -88,4 +88,4 @@ service:
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch]
-      exporters: [logging/debug, file]
+      exporters: [logging/debug, file, prometheusremotewrite]

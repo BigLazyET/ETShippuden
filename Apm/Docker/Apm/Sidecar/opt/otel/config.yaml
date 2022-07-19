@@ -1,0 +1,84 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+#        transport: unix
+#        endpoint: /tmp/grpc_otlp.sock
+
+  # Dummy receiver that's never used, because a pipeline is required to have one.
+  otlp/dummy:
+    protocols:
+      grpc:
+        endpoint: "localhost:65530"
+
+processors:
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 500
+    spike_limit_mib: 100
+
+  batch:
+    send_batch_size: 1024
+    timeout: 500ms
+    send_batch_max_size: 8192
+
+  spanmetrics:
+    metrics_exporter: otlp/spanmetrics
+    latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
+    dimensions:
+      - name: host.name
+        default: "${INSIP}"
+      - name: deployment.environment
+        default: "${DAOKEENV}"
+
+  tail_sampling:
+    decision_wait: 1s
+    num_traces: 10000
+    expected_new_traces_per_sec: 0
+    policies:
+      [
+          {
+            name: policy-1,
+            type: numeric_attribute,
+            numeric_attribute: {key: sampling.priority, min_value: 1, max_value: 1}
+          }
+      ]
+
+exporters:
+  logging:
+    loglevel: warn
+
+  otlp:
+    endpoint: apmagent.fly.17usoft.com:80
+    tls:
+      insecure: true
+
+  otlphttp:
+    endpoint: http://apmagent.fly.17usoft.com
+
+  otlp/spanmetrics:
+    endpoint: "localhost:4317"
+    tls:
+      insecure: true
+
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, spanmetrics, tail_sampling, batch]
+      exporters: [logging, otlp]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, otlp]
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, batch]
+      exporters: [logging, otlp]
+
+    # The exporter name must match the metrics_exporter name.
+    # The receiver is just a dummy and never used; added to pass validation requiring at least one receiver in a pipeline.
+    metrics/spanmetrics:
+      receivers: [otlp/dummy]
+      exporters: [logging, otlp/spanmetrics]

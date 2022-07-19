@@ -13,7 +13,7 @@ namespace Learn.Demo.WebApp
             Environment.SetEnvironmentVariable("DAOKEENV", "qa");
 
             var builder = WebApplication.CreateBuilder(args);
-            builder.Host.ConfigureEnvironment().UseApm();
+            // builder.Host.ConfigureEnvironment().UseApm();
 
             // Add services to the container.
             builder.Services.AddRazorPages();
