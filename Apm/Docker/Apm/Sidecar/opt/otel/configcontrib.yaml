@@ -20,6 +20,13 @@ receivers:
   #       scrape_interval: 10s
   #       static_configs:
   #       - targets: ['0.0.0.0:8889']
+  # receiver_creator:
+  #   watch_observers: [ host_observer ]
+  #   receivers:
+  #     dotnet_diagnostics:
+  #       rule: type == "hostport" && process_name == "dotnet" && transport == "tcp"
+  #       config:
+  #         pid: "`process_id`"
 
 processors:
   memory_limiter:
@@ -32,14 +39,14 @@ processors:
     timeout: 500ms
     send_batch_max_size: 8192
 
-  spanmetrics:
-    metrics_exporter: otlp/spanmetrics
-    latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
-    dimensions:
-      - name: host.name
-        default: "${INSIP}"
-      - name: deployment.environment
-        default: "${DAOKEENV}"
+  # spanmetrics:
+  #   metrics_exporter: otlp/spanmetrics
+  #   latency_histogram_buckets: [1ms, 2ms, 3ms, 5ms, 7ms, 10ms, 50ms, 100ms, 200ms, 400ms, 800ms, 1s, 1400ms, 2s, 5s, 10s, 15s, 30s, 100s]
+  #   dimensions:
+  #     - name: host.name
+  #       default: "${INSIP}"
+  #     - name: deployment.environment
+  #       default: "${DAOKEENV}"
   
   attributes/insert:
     actions:
@@ -81,10 +88,10 @@ exporters:
   otlphttp:
     endpoint: localhost:4318
 
-  otlp/spanmetrics:
-    endpoint: localhost:4311
-    tls:
-      insecure: true
+  # otlp/spanmetrics:
+  #   endpoint: localhost:4311
+  #   tls:
+  #     insecure: true
 
   otlp/dotnetmetrics:
     endpoint: localhost:4311
