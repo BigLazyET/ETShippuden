@@ -10,6 +10,12 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         private string _proxyPassword;
         private ProxyType _proxyType = ProxyType.Plain;
 
+        public bool IsSocks5Proxy
+        {
+            get { return _isSocks5Proxy; }
+            set { SetProperty(ref _isSocks5Proxy, value); }
+        }
+
         public string ProxyServer
         {
             get { return _proxyServer; }
@@ -32,12 +38,6 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         {
             get { return _proxyType; }
             set { SetProperty(ref _proxyType, value); }
-        }
-
-        public bool IsSocks5Proxy
-        {
-            get { return _isSocks5Proxy; }
-            set { SetProperty(ref _isSocks5Proxy, value); }
         }
     }
 }

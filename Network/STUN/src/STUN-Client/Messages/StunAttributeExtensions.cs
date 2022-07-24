@@ -55,5 +55,17 @@ namespace STUN.Messages
             var xorMappedAddressAttributeValue = (XorMappedAddressStunAttributeValue)xorMappedAddressAttribute.StunAttributeValue;
             return new IPEndPoint(xorMappedAddressAttributeValue.Address!, xorMappedAddressAttributeValue.Port);
         }
+
+        public static IPEndPoint GetStunOtherEndPoint(this StunMessage5389 stunMessage)
+        {
+            var addressAttribute = stunMessage.Attributes.FirstOrDefault(a => a.StunAttributeType == StunAttributeType.OtherAddress) ??
+                stunMessage.Attributes.FirstOrDefault(a => a.StunAttributeType == StunAttributeType.ChangedAddress);
+
+            if (addressAttribute is null)
+                return null;
+
+            var addressValue = (AddressStunAttributeValue)addressAttribute.StunAttributeValue;
+            return new IPEndPoint(addressValue.Address!, addressValue.Port);
+        }
     }
 }

@@ -36,6 +36,15 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         private async void CheckNATType()
         {
+            while (true)
+            {
+                NATCheck5389Outcome.LocalIPEndPoint = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
+                await Task.Delay(5000);
+                NATCheck5389Outcome.LocalIPEndPoint = new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort);
+                await Task.Delay(5000);
+            }
+
+
             if (string.IsNullOrEmpty(SelectedStunServer))
             {
                 await Application.Current.MainPage.DisplayAlert("警告", "请选择STUN Server", "好的");
@@ -44,22 +53,15 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
             var cancellationToken = new CancellationTokenSource().Token;
 
-            var proxyServer = _proxySetting.ProxyServer;
-            var proxyUsername = _proxySetting.ProxyUsername;
-            var proxyPassword = _proxySetting.ProxyPassword;
-            var proxyType = _proxySetting.ProxyType;
-
-            Verify.Operation(HostNameEndPoint.TryParse(proxyServer, out HostNameEndPoint? proxyHostNameEndPoint), "Unknown proxy address");
+            Verify.Operation(HostNameEndPoint.TryParse(_proxySetting.ProxyServer, out HostNameEndPoint proxyHostNameEndPoint), "Unknown proxy address");
             Socks5CreateOption sock5Option = new()
             {
                 Address = await _defaultDnsClient.QueryAsync(proxyHostNameEndPoint.HostName, cancellationToken),
                 Port = proxyHostNameEndPoint.Port,
-                UsernamePassword = new UsernamePassword { UserName = proxyUsername, Password = proxyPassword }
+                UsernamePassword = new UsernamePassword { UserName = _proxySetting.ProxyUsername, Password = _proxySetting.ProxyPassword }
             };
 
-#nullable enable
-            Verify.Operation(HostNameEndPoint.TryParse(SelectedStunServer, out HostNameEndPoint? stunHostNameEndPoint, DefaultStunServerPort), @"WRONG STUN Server");
-#nullable disable
+            Verify.Operation(HostNameEndPoint.TryParse(SelectedStunServer, out HostNameEndPoint stunHostNameEndPoint, DefaultStunServerPort), @"WRONG STUN Server");
             IPAddress stunServerIp;
             if (NATCheck5389Outcome.LocalIPEndPoint is null)
             {
@@ -75,8 +77,9 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                     stunServerIp = await _defaultADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
             }
 
+            var proxyType = _proxySetting.ProxyType;
             using var udpProxy = ProxyFactory.CreateProxy(proxyType, NATCheck5389Outcome.LocalIPEndPoint, sock5Option);
-            using var stunClient5389 = new StunClient5389(new IPEndPoint(stunServerIp, stunHostNameEndPoint.Port), NATCheck5389Outcome.LocalIPEndPoint, udpProxy);
+            using var stunClient5389 = new StunClient5389(new IPEndPoint(stunServerIp, stunHostNameEndPoint.Port), udpProxy, TimeSpan.FromSeconds(3));
 
             //NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
             //NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
@@ -96,9 +99,12 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                 await stunClient5389.CloseProxyAsync(cancellationToken);
             }
 
-            //NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
-            //NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
-            //NATCheck3489Outcome.PublicIPEndPoint = stunClient3489.ClassicStunResult.PublicEndPoint;
+            NATCheck5389Outcome.NATType = stunClient5389.StunResult5389.NATType;
+            NATCheck5389Outcome.LocalIPEndPoint = stunClient5389.StunResult5389.LocalEndPoint;
+            NATCheck5389Outcome.PublicIPEndPoint = stunClient5389.StunResult5389.PublicEndPoint;
+            NATCheck5389Outcome.BindingTest = stunClient5389.StunResult5389.BindingTestResult;
+            NATCheck5389Outcome.MappingBehavior = stunClient5389.StunResult5389.MappingBehavior;
+            NATCheck5389Outcome.FilteringBehavior = stunClient5389.StunResult5389.FilteringBehavior;
         }
     }
 }
