@@ -3,11 +3,11 @@ using Dns.Net.Clients;
 using ETLab_MauiPlainPureMode.Models;
 using Microsoft;
 using Socks5.Models;
+using STUN;
 using STUN.Client;
 using STUN.Proxy;
-using STUN;
-using System.Net.Sockets;
 using System.Net;
+using System.Net.Sockets;
 
 namespace ETLab_MauiPlainPureMode.ViewModels
 {
@@ -31,10 +31,10 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         public RFC5389ViewModel()
         {
             NATCheck5389Outcome = new NATCheck5389Outcome();
-            CheckNATTypeCommand = new Command(CheckNATType);
+            CheckNATTypeCommand = new Command(async () => await CheckNATType());
         }
 
-        private async void CheckNATType()
+        private async Task CheckNATType()
         {
             while (true)
             {
