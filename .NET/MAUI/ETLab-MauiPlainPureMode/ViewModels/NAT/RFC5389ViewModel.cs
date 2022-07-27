@@ -8,6 +8,7 @@ using STUN.Client;
 using STUN.Proxy;
 using System.Net;
 using System.Net.Sockets;
+using System.Windows.Input;
 
 namespace ETLab_MauiPlainPureMode.ViewModels
 {
@@ -19,32 +20,27 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         private IDnsClient _defaultADnsClient = new DefaultAClient();
         private IDnsClient _defaultAAAADnsClient = new DefaultAAAAClient();
         private ProxySettingViewModel _proxySetting = App.ProxySettingViewModel;
+        private readonly IProxyFactory _proxyFactory;
 
-        public IEnumerable<string> STUNServers => Constants.STUNServers;
+        public IEnumerable<string> StunServers => Constants.StunServers;
 
-        public NATCheck5389Outcome NATCheck5389Outcome { get; set; }
+        public NatCheck5389Outcome NatCheck5389Outcome { get; set; }
 
-        public Command CheckNATTypeCommand { get; private set; }
+        public ICommand CheckNatTypeCommand { get; private set; }
 
-        public string SelectedStunServer { get; set; } = @"stun.miwifi.com";
+        public string SelectedStunServer { get; set; } = Constants.StunServers.First();
 
         public RFC5389ViewModel()
         {
-            NATCheck5389Outcome = new NATCheck5389Outcome();
-            CheckNATTypeCommand = new Command(async () => await CheckNATType());
+            _proxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IProxyFactory>();
+
+            NatCheck5389Outcome = new NatCheck5389Outcome();
+            // CheckNATTypeCommand = new Command(async () => await CheckNATType());
+            CheckNatTypeCommand = new AsyncCommand(CheckNATTypeAsync);
         }
 
-        private async Task CheckNATType()
+        private async Task CheckNATTypeAsync()
         {
-            while (true)
-            {
-                NATCheck5389Outcome.LocalIPEndPoint = new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
-                await Task.Delay(5000);
-                NATCheck5389Outcome.LocalIPEndPoint = new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort);
-                await Task.Delay(5000);
-            }
-
-
             if (string.IsNullOrEmpty(SelectedStunServer))
             {
                 await Application.Current.MainPage.DisplayAlert("警告", "请选择STUN Server", "好的");
@@ -63,22 +59,22 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
             Verify.Operation(HostNameEndPoint.TryParse(SelectedStunServer, out HostNameEndPoint stunHostNameEndPoint, DefaultStunServerPort), @"WRONG STUN Server");
             IPAddress stunServerIp;
-            if (NATCheck5389Outcome.LocalIPEndPoint is null)
+            if (NatCheck5389Outcome.LocalIPEndPoint is null)
             {
                 stunServerIp = await _defaultDnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
-                NATCheck5389Outcome.LocalIPEndPoint = stunServerIp.AddressFamily is AddressFamily.InterNetworkV6 ?
+                NatCheck5389Outcome.LocalIPEndPoint = stunServerIp.AddressFamily is AddressFamily.InterNetworkV6 ?
                     new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort) : new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
             }
             else
             {
-                if (NATCheck5389Outcome.LocalIPEndPoint.AddressFamily is AddressFamily.InterNetworkV6)
+                if (NatCheck5389Outcome.LocalIPEndPoint.AddressFamily is AddressFamily.InterNetworkV6)
                     stunServerIp = await _defaultAAAADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
                 else
                     stunServerIp = await _defaultADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
             }
 
             var proxyType = _proxySetting.ProxyType;
-            using var udpProxy = ProxyFactory.CreateProxy(proxyType, NATCheck5389Outcome.LocalIPEndPoint, sock5Option);
+            using var udpProxy = _proxyFactory.CreateProxy(proxyType, NatCheck5389Outcome.LocalIPEndPoint, sock5Option);
             using var stunClient5389 = new StunClient5389(new IPEndPoint(stunServerIp, stunHostNameEndPoint.Port), udpProxy, TimeSpan.FromSeconds(3));
 
             //NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
@@ -99,12 +95,12 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                 await stunClient5389.CloseProxyAsync(cancellationToken);
             }
 
-            NATCheck5389Outcome.NATType = stunClient5389.StunResult5389.NATType;
-            NATCheck5389Outcome.LocalIPEndPoint = stunClient5389.StunResult5389.LocalEndPoint;
-            NATCheck5389Outcome.PublicIPEndPoint = stunClient5389.StunResult5389.PublicEndPoint;
-            NATCheck5389Outcome.BindingTest = stunClient5389.StunResult5389.BindingTestResult;
-            NATCheck5389Outcome.MappingBehavior = stunClient5389.StunResult5389.MappingBehavior;
-            NATCheck5389Outcome.FilteringBehavior = stunClient5389.StunResult5389.FilteringBehavior;
+            NatCheck5389Outcome.NatType = stunClient5389.StunResult5389.NATType;
+            NatCheck5389Outcome.LocalIPEndPoint = stunClient5389.StunResult5389.LocalEndPoint;
+            NatCheck5389Outcome.PublicIPEndPoint = stunClient5389.StunResult5389.PublicEndPoint;
+            NatCheck5389Outcome.BindingTest = stunClient5389.StunResult5389.BindingTestResult;
+            NatCheck5389Outcome.MappingBehavior = stunClient5389.StunResult5389.MappingBehavior;
+            NatCheck5389Outcome.FilteringBehavior = stunClient5389.StunResult5389.FilteringBehavior;
         }
     }
 }

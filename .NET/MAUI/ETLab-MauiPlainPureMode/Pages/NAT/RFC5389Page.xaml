@@ -32,7 +32,7 @@
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
-                   Text="{Binding NATCheck5389Outcome.BindingTest}" />
+                   Text="{Binding NatCheck5389Outcome.BindingTest}" />
         </Border>
         <Label Text="Mapping Behavior"
                Margin="0,15,0,5" />
@@ -42,7 +42,7 @@
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
-                   Text="{Binding NATCheck5389Outcome.MappingBehavior}" />
+                   Text="{Binding NatCheck5389Outcome.MappingBehavior}" />
         </Border>
         <Label Text="Filtering Behavior"
                Margin="0,15,0,5" />
@@ -52,7 +52,7 @@
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
-                   Text="{Binding NATCheck5389Outcome.FilteringBehavior}" />
+                   Text="{Binding NatCheck5389Outcome.FilteringBehavior}" />
         </Border>
         <Label Text="Local IPEndPoint"
                Margin="0,15,0,5" />
@@ -62,7 +62,7 @@
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
-                   Text="{Binding NATCheck5389Outcome.LocalIPEndPoint}" />
+                   Text="{Binding NatCheck5389Outcome.LocalIPEndPoint}" />
         </Border>
         <Label Text="Public IPEndPoint"
                Margin="0,15,0,5" />
@@ -72,11 +72,11 @@
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
-                   Text="{Binding NATCheck5389Outcome.PublicIPEndPoint}" />
+                   Text="{Binding NatCheck5389Outcome.PublicIPEndPoint}" />
         </Border>
         <Button Text="Test"
                 Margin="0,20,0,0"
                 VerticalOptions="EndAndExpand"
-                Command="{Binding CheckNATTypeCommand}" />
+                Command="{Binding CheckNatTypeCommand}" />
     </VerticalStackLayout>
 </ContentPage>

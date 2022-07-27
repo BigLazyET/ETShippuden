@@ -6,14 +6,14 @@ namespace ETLab_MauiPlainPureMode.Models
 {
     public class NATCheck3489Outcome : ObservableObject
     {
-        private NATType _natType = NATType.Unknown;
+        private NatType _natType = NatType.Unknown;
         private IPEndPoint _localIPEndPoint; // new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
         private IPEndPoint _publicIPEndPoint;
 
         /// <summary>
         /// 检测的NAT类型
         /// </summary>
-        public NATType NATTYPE { get => _natType; set => SetProperty(ref _natType, value); }
+        public NatType NATTYPE { get => _natType; set => SetProperty(ref _natType, value); }
 
         /// <summary>
         /// 本地发送请求的地址(IP:Port)

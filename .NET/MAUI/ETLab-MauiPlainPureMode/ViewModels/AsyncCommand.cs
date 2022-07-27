@@ -18,6 +18,9 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                 notificationSource.PropertyChanged += RaiseCanExecuteChanged;
         }
 
+        public AsyncCommand(Func<Task> execute, Func<bool> canExecute = null, INotifyPropertyChanged notificationSource = null)
+            : this(_ => execute.Invoke(), _ => (canExecute ?? (() => true)).Invoke(), notificationSource) { }
+
         private void RaiseCanExecuteChanged(object sender, PropertyChangedEventArgs e)
         {
             CanExecuteChanged?.Invoke(this, EventArgs.Empty);
@@ -35,7 +38,14 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public async void Execute(object parameter = null)
         {
-            await _execute(parameter);
+            try
+            {
+                await ExecuteAsync(parameter);
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
     }
 }

@@ -55,7 +55,7 @@ namespace STUN.Client
             // Filtering Behavior Check
             var isFilteringCarryOn = await IsCarryOnByFilteringCheck1(cancellationToken);
 
-            if(isFilteringCarryOn)
+            if (isFilteringCarryOn)
                 isFilteringCarryOn = await IsCarryOnByFilteringCheck2(cancellationToken);
 
             if (isFilteringCarryOn)
@@ -71,13 +71,13 @@ namespace STUN.Client
             var mappingBehavior = StunResult5389.MappingBehavior;
             var filteringBehavior = StunResult5389.FilteringBehavior;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.EndPointIndependent)
-                StunResult5389.NATType = NATType.FullCone;
+                StunResult5389.NATType = NatType.FullCone;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.AddressDependent)
-                StunResult5389.NATType = NATType.RestrictedCone;
+                StunResult5389.NATType = NatType.RestrictedCone;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.AddressAndPortDependent)
-                StunResult5389.NATType = NATType.PortRestrictedCone;
+                StunResult5389.NATType = NatType.PortRestrictedCone;
             if (mappingBehavior == MappingBehavior.AddressAndPortDependent && filteringBehavior == FilteringBehavior.AddressAndPortDependent)
-                StunResult5389.NATType = NATType.Symmetric;
+                StunResult5389.NATType = NatType.Symmetric;
         }
 
         #region Mapping Behavior Check

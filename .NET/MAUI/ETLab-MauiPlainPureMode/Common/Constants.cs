@@ -2,7 +2,7 @@
 {
     public class Constants
     {
-        public static IEnumerable<string> STUNServers => new List<string>
+        public static IEnumerable<string> StunServers => new List<string>
         {
             @"stun.syncthing.net",
             @"stun.qq.com",

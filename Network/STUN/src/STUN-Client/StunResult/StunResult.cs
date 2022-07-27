@@ -5,7 +5,7 @@ namespace STUN
 {
     public class StunResult
     {
-        public NATType NATType { get; set; } = NATType.Unknown;
+        public NatType NATType { get; set; } = NatType.Unknown;
 
         public IPEndPoint? PublicEndPoint { get; set; }
 
@@ -15,7 +15,7 @@ namespace STUN
         {
             PublicEndPoint = default;
             LocalEndPoint = default;
-            NATType = NATType.Unknown;
+            NATType = NatType.Unknown;
         }
     }
 }

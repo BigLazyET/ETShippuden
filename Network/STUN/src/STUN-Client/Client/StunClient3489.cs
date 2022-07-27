@@ -59,7 +59,7 @@ namespace STUN.Client
             // Not Receive：udp blocked
             if (stepResponse1 == null)
             {
-                ClassicStunResult.NATType = NATType.UdpBlocked;
+                ClassicStunResult.NATType = NatType.UdpBlocked;
                 return;
             }
 
@@ -77,7 +77,7 @@ namespace STUN.Client
             if (mappedAddress1 is null || serverAnotherIPEndpoint is null ||
                 Equals(serverAnotherIPEndpoint.Address, stepResponse1.remote.Address) || Equals(serverAnotherIPEndpoint.Port, stepResponse1.remote.Port))
             {
-                ClassicStunResult.NATType = NATType.UnsupportedServer;
+                ClassicStunResult.NATType = NatType.UnsupportedServer;
                 return;
             }
 
@@ -94,7 +94,7 @@ namespace STUN.Client
                 if (Equals(stepResponse2.remote.Address, stepResponse1.remote.Address) &&
                     (stepResponse2.remote.Port == stepResponse1.remote.Port))
                 {
-                    ClassicStunResult.NATType = NATType.UnsupportedServer;
+                    ClassicStunResult.NATType = NatType.UnsupportedServer;
                     return;
                 }
             }
@@ -103,19 +103,19 @@ namespace STUN.Client
             {
                 if (stepResponse2 is null)
                 {
-                    ClassicStunResult.NATType = NATType.SymmetricUdpFirewall;
+                    ClassicStunResult.NATType = NatType.SymmetricUdpFirewall;
                     return;
                 }
                 else
                 {
-                    ClassicStunResult.NATType = NATType.OpenInternet;
+                    ClassicStunResult.NATType = NatType.OpenInternet;
                     return;
                 }
             }
 
             if (stepResponse2 is not null)
             {
-                ClassicStunResult.NATType = NATType.FullCone;
+                ClassicStunResult.NATType = NatType.FullCone;
                 ClassicStunResult.PublicEndPoint = mappedAddress2;
                 return;
             }
@@ -125,14 +125,14 @@ namespace STUN.Client
 
             if (stepResponse1_2 is null)
             {
-                ClassicStunResult.NATType = NATType.Unknown;
+                ClassicStunResult.NATType = NatType.Unknown;
                 return;
             }
 
             var mappedAddress1_2 = stepResponse1_2.stunMessage.GetIPEndPointFromMappedAddressAttribute();
             if (!Equals(mappedAddress1_2, ClassicStunResult.PublicEndPoint))
             {
-                ClassicStunResult.NATType = NATType.Symmetric;
+                ClassicStunResult.NATType = NatType.Symmetric;
                 ClassicStunResult.PublicEndPoint = mappedAddress1_2;
                 return;
             }
@@ -146,12 +146,12 @@ namespace STUN.Client
                     Equals(stepResponse3.remote.Address, stepResponse1.remote.Address) &&
                     stepResponse3.remote.Port != stepResponse1.remote.Port)
                 {
-                    ClassicStunResult.NATType = NATType.RestrictedCone;
+                    ClassicStunResult.NATType = NatType.RestrictedCone;
                     ClassicStunResult.PublicEndPoint = mappedAddress3;
                 }
             }
 
-            ClassicStunResult.NATType = NATType.PortRestrictedCone;
+            ClassicStunResult.NATType = NatType.PortRestrictedCone;
             ClassicStunResult.PublicEndPoint = mappedAddress1_2;
         }
 

@@ -6,9 +6,9 @@ using System.Runtime.CompilerServices;
 
 namespace STUN.Proxy
 {
-    public class ProxyFactory
+    public class ProxyFactory : IProxyFactory
     {
-        public static IUdpProxy CreateProxy(ProxyType proxyType, IPEndPoint localEndPoint, Socks5CreateOption socks5CreateOption)
+        public IUdpProxy CreateProxy(ProxyType proxyType, IPEndPoint localEndPoint, Socks5CreateOption socks5CreateOption)
         {
             IUdpProxy udpProxy = proxyType switch
             {

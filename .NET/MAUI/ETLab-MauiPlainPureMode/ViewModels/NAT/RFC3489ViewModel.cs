@@ -5,7 +5,6 @@ using Microsoft;
 using Socks5.Models;
 using STUN;
 using STUN.Client;
-using STUN.Enums;
 using STUN.Proxy;
 using System.Net;
 using System.Net.Sockets;
@@ -20,8 +19,9 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         private IDnsClient _defaultADnsClient = new DefaultAClient();
         private IDnsClient _defaultAAAADnsClient = new DefaultAAAAClient();
         private ProxySettingViewModel _proxySetting = App.ProxySettingViewModel;
+        private readonly IProxyFactory _proxyFactory;
 
-        public IEnumerable<string> STUNServers => Constants.STUNServers;
+        public IEnumerable<string> STUNServers => Constants.StunServers;
 
         public NATCheck3489Outcome NATCheck3489Outcome { get; set; }
 
@@ -31,6 +31,8 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public RFC3489ViewModel()
         {
+            _proxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IProxyFactory>();
+
             NATCheck3489Outcome = new NATCheck3489Outcome();
             CheckNATTypeCommand = new Command(CheckNATType);
         }
@@ -76,7 +78,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                     stunServerIp = await _defaultADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
             }
 
-            using var udpProxy = ProxyFactory.CreateProxy(proxyType, NATCheck3489Outcome.LocalIPEndPoint, sock5Option);
+            using var udpProxy = _proxyFactory.CreateProxy(proxyType, NATCheck3489Outcome.LocalIPEndPoint, sock5Option);
             using var stunClient3489 = new StunClient3489(new IPEndPoint(stunServerIp, stunHostNameEndPoint.Port), NATCheck3489Outcome.LocalIPEndPoint, udpProxy);
 
             NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;

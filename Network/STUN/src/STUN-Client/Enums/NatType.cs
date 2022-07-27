@@ -1,6 +1,6 @@
 ﻿namespace STUN.Enums
 {
-    public enum NATType
+    public enum NatType
     {
         Unknown,
         UnsupportedServer,

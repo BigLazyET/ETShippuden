@@ -1,4 +1,6 @@
-﻿namespace ETLab_MauiPlainPureMode;
+﻿using STUN;
+
+namespace ETLab_MauiPlainPureMode;
 
 public static class MauiProgram
 {
@@ -15,6 +17,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
+        builder.Services.AddStunService();
         ServiceProvider = builder.Services.BuildServiceProvider();
 
         return builder.Build();

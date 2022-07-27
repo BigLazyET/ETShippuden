@@ -7,7 +7,7 @@ namespace STUN
         /// <summary>
         /// IPv4地址或IPv6地址或主机名
         /// </summary>
-        public string HostName { get; init; }
+        public string? HostName { get; init; }
 
         /// <summary>
         /// 端口号
@@ -21,13 +21,13 @@ namespace STUN
                 return false;
 
             var hostLen = hostName.Length;
-            var colonPos = hostName.LastIndexOf(':');
+            var colonPos = hostName.LastIndexOf(':');   // 形如 0.0.0.0:0，0.0.0.0[0-9]:0，[::]:0
 
             if (colonPos > 0)
             {
-                if (hostName[colonPos - 1] is ']') // 192.168.1.1[0-9]:8080
+                if (hostName[colonPos - 1] is ']')
                     hostLen = colonPos;
-                else if (hostName.AsSpan(0, colonPos).LastIndexOf(':') is -1)   // 192.168.1.1:8080
+                else if (hostName.AsSpan(0, colonPos).LastIndexOf(':') is -1)
                     hostLen = colonPos;
             }
 
