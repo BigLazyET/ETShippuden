@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using Dns.Net.Clients;
+using Microsoft.Extensions.DependencyInjection;
 using STUN.Extensions;
 using STUN.Proxy;
 
@@ -8,6 +9,10 @@ namespace STUN
     {
         public static IServiceCollection AddStunService(this IServiceCollection service)
         {
+            service.AddSingleton<DefaultDnsClient>();
+            service.AddSingleton<DefaultAClient>();
+            service.AddSingleton<DefaultAAAAClient>();
+
             service.AddSingleton<IProxyFactory, ProxyFactory>();
             service.AddSingleton<IStunClientFactory, StunClientFactory>();
 

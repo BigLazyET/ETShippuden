@@ -21,7 +21,7 @@ namespace STUN
                 return false;
 
             var hostLen = hostName.Length;
-            var colonPos = hostName.LastIndexOf(':');   // 形如 0.0.0.0:0，0.0.0.0[0-9]:0，[::]:0
+            var colonPos = hostName.LastIndexOf(':');   // 形如 0.0.0.0:0，0.0.0.0[0-9]:0，[::]:0，域名，域名:port
 
             if (colonPos > 0)
             {

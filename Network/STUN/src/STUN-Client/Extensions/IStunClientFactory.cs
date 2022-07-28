@@ -5,6 +5,6 @@ namespace STUN.Extensions
 {
     public interface IStunClientFactory
     {
-        IStunClient GetClient(ProxyType proxyType);
+        Task<IStunClient> GetClient(ProxyType proxyType, string proxyServer, string stunServer, string proxyUser, string proxyPwd);
     }
 }
