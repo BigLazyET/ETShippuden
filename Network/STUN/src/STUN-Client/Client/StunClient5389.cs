@@ -3,6 +3,7 @@ using STUN.Enums;
 using STUN.Messages;
 using STUN.Proxy;
 using System.Net;
+using System.Threading;
 
 namespace STUN.Client
 {
@@ -24,8 +25,6 @@ namespace STUN.Client
 
         private readonly IUdpProxy _udpProxy;
 
-        public StunResult5389 StunResult5389 = new();
-
         public StunClient5389(IPEndPoint remoteEndPoint, IUdpProxy udpProxy, TimeSpan receiveTimeout)
             : base(remoteEndPoint, udpProxy, receiveTimeout)
         {
@@ -34,29 +33,32 @@ namespace STUN.Client
 
             _remoteEndPoint = remoteEndPoint;
             _udpProxy = udpProxy;
-            // _udpProxy = udpProxy ?? new NoneUdpProxy(localEndPoint); // 放到前面做约束
-            // StunResult5389.LocalEndPoint = localEndPoint;   // 无意义
         }
 
         public override async ValueTask QueryAsync(CancellationToken cancellationToken = default)
         {
+            // Pre Binding Request Check
+            await PreBindingRequestCheckAsync();
+            if(StunResult5389.BindingTestResult != BindingTestResult.Success)
+                return;
+
             // Mapping Behavior Check
-            var isMappingCarryOn = await IsCarryOnByMappingCheck1(cancellationToken);
+            var isMappingCarryOn = await IsCarryOnByMappingCheck1Async(cancellationToken);
 
             if (isMappingCarryOn)
-                isMappingCarryOn = await IsCarryOnByMappingCheck2(cancellationToken);
+                isMappingCarryOn = await IsCarryOnByMappingCheck2Async(cancellationToken);
 
             if (isMappingCarryOn)
-                isMappingCarryOn = await IsCarryOnByMappingCheck3(cancellationToken);
+                isMappingCarryOn = await IsCarryOnByMappingCheck3Async(cancellationToken);
 
             if (isMappingCarryOn)
                 StunResult5389.MappingBehavior = MappingBehavior.Unknown;
 
             // Filtering Behavior Check
-            var isFilteringCarryOn = await IsCarryOnByFilteringCheck1(cancellationToken);
+            var isFilteringCarryOn = await IsCarryOnByFilteringCheck1Async(cancellationToken);
 
             if (isFilteringCarryOn)
-                isFilteringCarryOn = await IsCarryOnByFilteringCheck2(cancellationToken);
+                isFilteringCarryOn = await IsCarryOnByFilteringCheck2Async(cancellationToken);
 
             if (isFilteringCarryOn)
                 StunResult5389.FilteringBehavior = FilteringBehavior.Unknown;
@@ -80,6 +82,26 @@ namespace STUN.Client
                 StunResult5389.NATType = NatType.Symmetric;
         }
 
+        #region Pre-BindingRequest Check
+        private async Task PreBindingRequestCheckAsync(CancellationToken cancellationToken = default)
+        {
+            var request = new StunMessage5389();
+
+            var response = await RequestAsync(request, _remoteEndPoint, _remoteEndPoint, cancellationToken);
+            var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
+            var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
+
+            if (response is null)
+                StunResult5389.BindingTestResult = BindingTestResult.Fail;
+            if (mappedEndPoint is null)
+                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
+            if (stunOtherEndPoint is not null && stunOtherEndPoint.Address.Equals(_remoteEndPoint.Address) && stunOtherEndPoint.Port == _remoteEndPoint.Port)
+                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
+
+            StunResult5389.BindingTestResult = BindingTestResult.Success;
+        }
+        #endregion
+
         #region Mapping Behavior Check
         /// <summary>
         /// 客户端A以IP_CA: PORT_CA给STUN Server的IP_SA: PORT_SA发送一个bind请求
@@ -89,16 +111,12 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>isCarryOn：true/侦测继续，false/侦测到此结束</returns>
-        private async ValueTask<bool> IsCarryOnByMappingCheck1(CancellationToken cancellationToken = default)
+        private async ValueTask<bool> IsCarryOnByMappingCheck1Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389();    // the default of StunMessageType is BindingRequest
             var response = await RequestAsync(request, _remoteEndPoint, _remoteEndPoint, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
             var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
-
-            var isFailOrUnSupport = MappingCommonCheck(response, mappedEndPoint, stunOtherEndPoint);
-            if (isFailOrUnSupport)
-                return false;
 
             if (response is not null && mappedEndPoint is not null)
             {
@@ -128,7 +146,7 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>isCarryOn：true/侦测继续，false/侦测到此结束</returns>
-        private async ValueTask<bool> IsCarryOnByMappingCheck2(CancellationToken cancellationToken = default)
+        private async ValueTask<bool> IsCarryOnByMappingCheck2Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389();
 
@@ -136,10 +154,6 @@ namespace STUN.Client
             var response = await RequestAsync(request, remoteIPEndPoint, remoteIPEndPoint, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
             var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
-
-            var isFailOrUnSupport = MappingCommonCheck(response, mappedEndPoint, stunOtherEndPoint);
-            if (isFailOrUnSupport)
-                return false;
 
             if (Equals(mappedEndPoint.Address, StunResult5389.PublicEndPoint.Address) && mappedEndPoint.Port == StunResult5389.PublicEndPoint.Port)
             {
@@ -162,17 +176,13 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns>isCarryOn：true/侦测继续，false/侦测到此结束</returns>
-        private async ValueTask<bool> IsCarryOnByMappingCheck3(CancellationToken cancellationToken = default)
+        private async ValueTask<bool> IsCarryOnByMappingCheck3Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389();
 
             var response = await RequestAsync(request, StunResult5389.OtherEndPoint!, StunResult5389.OtherEndPoint!, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
             var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
-
-            var isFailOrUnSupport = MappingCommonCheck(response, mappedEndPoint, stunOtherEndPoint);
-            if (isFailOrUnSupport)
-                return false;
 
             if (Equals(StunResult5389.PublicEndPoint.Address, mappedEndPoint.Address) && StunResult5389.PublicEndPoint.Port == mappedEndPoint.Port)
             {
@@ -190,20 +200,6 @@ namespace STUN.Client
             StunResult5389.PublicEndPoint = mappedEndPoint;
             return true;
         }
-
-        private bool MappingCommonCheck(StunResponse response, IPEndPoint? mappedEndPoint, IPEndPoint stunOtherEndPoint)
-        {
-            if (response is null)
-                StunResult5389.BindingTestResult = BindingTestResult.Fail;
-            if (mappedEndPoint is null)
-                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
-            if (stunOtherEndPoint is not null && stunOtherEndPoint.Address.Equals(_remoteEndPoint.Address) && stunOtherEndPoint.Port == _remoteEndPoint.Port)
-                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
-
-            StunResult5389.BindingTestResult = BindingTestResult.Success;
-
-            return StunResult5389.BindingTestResult != BindingTestResult.Success;
-        }
         #endregion
 
         #region Filtering Behavior Check
@@ -216,7 +212,7 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask<bool> IsCarryOnByFilteringCheck1(CancellationToken cancellationToken = default)
+        private async ValueTask<bool> IsCarryOnByFilteringCheck1Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389
             {
@@ -246,7 +242,7 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        private async ValueTask<bool> IsCarryOnByFilteringCheck2(CancellationToken cancellationToken = default)
+        private async ValueTask<bool> IsCarryOnByFilteringCheck2Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389
             {
@@ -265,10 +261,6 @@ namespace STUN.Client
                     FilteringBehavior.AddressDependent : FilteringBehavior.UnSupportedServer;
             return false;
         }
-        #endregion
-
-        #region Pre-BindingRequest Check
-
         #endregion
     }
 }

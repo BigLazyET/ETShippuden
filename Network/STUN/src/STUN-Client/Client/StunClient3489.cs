@@ -19,6 +19,8 @@ namespace STUN.Client
 
         public StunResult3489 ClassicStunResult { get; } = new();
 
+        public StunResult5389 StunResult5389 => throw new NotImplementedException();
+
         public StunClient3489(IPEndPoint remoteEndPoint, IPEndPoint localEndPoint, IUdpProxy? udpProxy = null)
         {
             _udpProxy = udpProxy ?? new NoneUdpProxy(localEndPoint);

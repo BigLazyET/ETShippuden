@@ -7,7 +7,8 @@ namespace ETLab_MauiPlainPureMode.Models
     public class NATCheck3489Outcome : ObservableObject
     {
         private NatType _natType = NatType.Unknown;
-        private IPEndPoint _localIPEndPoint; // new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
+        // new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
+        private IPEndPoint _localIPEndPoint;
         private IPEndPoint _publicIPEndPoint;
 
         /// <summary>

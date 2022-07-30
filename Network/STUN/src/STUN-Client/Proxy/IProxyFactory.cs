@@ -1,11 +1,7 @@
-﻿using Socks5.Models;
-using STUN.Enums;
-using System.Net;
-
-namespace STUN.Proxy
+﻿namespace STUN.Proxy
 {
-    public interface IProxyFactory
+    public interface IUdpProxyFactory
     {
-        IUdpProxy CreateProxy(ProxyType proxyType, IPEndPoint localEndPoint, Socks5CreateOption socks5CreateOption);
+        Task<IUdpProxy> CreateProxyAsync(UdpProxyCreateOption createOption);
     }
 }

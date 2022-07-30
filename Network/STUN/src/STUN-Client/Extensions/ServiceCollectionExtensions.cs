@@ -13,7 +13,7 @@ namespace STUN
             service.AddSingleton<DefaultAClient>();
             service.AddSingleton<DefaultAAAAClient>();
 
-            service.AddSingleton<IProxyFactory, ProxyFactory>();
+            service.AddSingleton<IUdpProxyFactory, UdpProxyFactory>();
             service.AddSingleton<IStunClientFactory, StunClientFactory>();
 
             return service;

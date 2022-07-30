@@ -19,7 +19,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
         private IDnsClient _defaultADnsClient = new DefaultAClient();
         private IDnsClient _defaultAAAADnsClient = new DefaultAAAAClient();
         private ProxySettingViewModel _proxySetting = App.ProxySettingViewModel;
-        private readonly IProxyFactory _proxyFactory;
+        private readonly IUdpProxyFactory _proxyFactory;
 
         public IEnumerable<string> STUNServers => Constants.StunServers;
 
@@ -31,7 +31,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public RFC3489ViewModel()
         {
-            _proxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IProxyFactory>();
+            _proxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IUdpProxyFactory>();
 
             NATCheck3489Outcome = new NATCheck3489Outcome();
             CheckNATTypeCommand = new Command(CheckNATType);

@@ -8,9 +8,13 @@ namespace STUN.Proxy
     {
         public Socket Client { get; }
 
+        public IPEndPoint LocalEndPoint { get; }
+
         public NoneUdpProxy(IPEndPoint localEndPoint)
         {
             Requires.NotNull(localEndPoint, nameof(localEndPoint));
+
+            LocalEndPoint = localEndPoint;
 
             Client = new Socket(localEndPoint.AddressFamily, SocketType.Dgram, ProtocolType.Udp);
             Client.Bind(localEndPoint);

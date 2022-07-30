@@ -1,4 +1,6 @@
-﻿namespace ETLab_MauiPlainPureMode
+﻿using System.Net;
+
+namespace ETLab_MauiPlainPureMode
 {
     public class Constants
     {

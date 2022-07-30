@@ -17,6 +17,8 @@ namespace STUN.Client
 
         protected TimeSpan ReceiveTimeout { get; set; } = TimeSpan.FromSeconds(3);
 
+        public StunResult5389 StunResult5389 => new();
+
         public StunClient(IPEndPoint remoteEndPoint, IUdpProxy udpProxy, TimeSpan receiveTimeout)
         {
             Requires.NotNull(remoteEndPoint, nameof(remoteEndPoint));

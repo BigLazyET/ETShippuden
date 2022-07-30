@@ -1,40 +1,47 @@
 ﻿using Dns.Net.Clients;
 using Microsoft;
-using Socks5.Models;
 using STUN.Client;
 using STUN.Enums;
 using STUN.Proxy;
+using System.Net;
+using System.Net.Sockets;
 
 namespace STUN.Extensions
 {
     public class StunClientFactory : IStunClientFactory
     {
-        private readonly IProxyFactory _proxyFactory;
-        private readonly DefaultDnsClient _defaultDnsClient;
+        const ushort DefaultStunServerPort = 3478;
+
         private readonly DefaultAClient _defaultAClient;
         private readonly DefaultAAAAClient _defaultAAAAClient;
 
-        public StunClientFactory(IProxyFactory proxyFactory, DefaultDnsClient defaultDnsClient, DefaultAClient defaultAClient, DefaultAAAAClient defaultAAAAClient)
+        public StunClientFactory(DefaultAClient defaultAClient, DefaultAAAAClient defaultAAAAClient)
         {
-            _proxyFactory = proxyFactory;
+            _defaultAClient = defaultAClient;
+            _defaultAAAAClient = defaultAAAAClient;
         }
 
-        public async Task<IStunClient> GetClient(ProxyType proxyType, string proxyServer, string stunServer, string proxyUser, string proxyPwd)
+        public async Task<IStunClient> CreateClientAsync(StunClientCreateOption createOption)
         {
-            Requires.NotNullOrEmpty(proxyServer, nameof(proxyServer));
-            Requires.NotNullOrEmpty(stunServer, nameof(stunServer));
+            Requires.NotNullOrEmpty(createOption.StunServer, nameof(createOption.StunServer));
+            Verify.Operation(HostNameEndPoint.TryParse(createOption.StunServer, out var stunHostnameEndPoint, DefaultStunServerPort), "Wrong stun server");
 
-            Verify.Operation(HostNameEndPoint.TryParse(proxyServer, out var proxyHostnameEndPoint), "Unknow proxy address");
-            var proxyAddress = await _defaultDnsClient.QueryAsync(proxyHostnameEndPoint.HostName!);
-            var socks5Option = new Socks5CreateOption
+            var udpProxy = createOption.UdpProxy;
+            var localEndPoint = udpProxy.LocalEndPoint;
+            var stunIp = localEndPoint.AddressFamily switch
             {
-                Address = proxyAddress,
-                Port = proxyHostnameEndPoint.Port,
-                UsernamePassword = new() { UserName = proxyUser, Password = proxyPwd }
+                AddressFamily.InterNetworkV6 => await _defaultAAAAClient.QueryAsync(stunHostnameEndPoint.HostName!),
+                _ => await _defaultAClient.QueryAsync(stunHostnameEndPoint.HostName!)
             };
 
+            IStunClient stunClient = createOption.StunProtocol switch
+            {
+                StunProtocolType.RFC3489 => new StunClient3489(new IPEndPoint(stunIp, stunHostnameEndPoint.Port), localEndPoint, udpProxy),
+                StunProtocolType.RFC5389 => new StunClient5389(new IPEndPoint(stunIp, stunHostnameEndPoint.Port), udpProxy, TimeSpan.FromSeconds(3)),
+                _ => throw Assumes.NotReachable()
+            };
 
-            return null;
+            return stunClient;
         }
     }
 }
