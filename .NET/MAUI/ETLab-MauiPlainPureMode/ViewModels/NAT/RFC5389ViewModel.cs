@@ -1,8 +1,10 @@
 ﻿using ETLab_MauiPlainPureMode.Models;
+using STUN;
 using STUN.Client;
 using STUN.Enums;
 using STUN.Extensions;
 using STUN.Proxy;
+using System.Net;
 using System.Windows.Input;
 
 namespace ETLab_MauiPlainPureMode.ViewModels
@@ -15,11 +17,15 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
         public IEnumerable<string> StunServers => Constants.StunServers;
 
+        public IEnumerable<IPEndPoint> LocalEndPoints => Constants.LocalEndPoints;
+
         public NatCheck5389Outcome NatCheck5389Outcome { get; set; }
 
         public ICommand CheckNatTypeCommand { get; private set; }
 
         public string SelectedStunServer { get; set; } = Constants.StunServers.First();
+
+        public IPEndPoint SelectedLocalEndPoint { get; set; } = Constants.LocalEndPoints.First();
 
         public RFC5389ViewModel()
         {
@@ -43,7 +49,7 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
             var udpCreateOption = new UdpProxyCreateOption
             {
-                LocalEndPoint = NatCheck5389Outcome.LocalIPEndPoint,
+                LocalEndPoint = NatCheck5389Outcome.ActualLocalIPEndPoint ?? SelectedLocalEndPoint,
                 proxyType = _proxySetting.ProxyType,
                 ProxyServer = _proxySetting.ProxyServer,
                 ProxyUsername = _proxySetting.ProxyUsername,
@@ -73,12 +79,13 @@ namespace ETLab_MauiPlainPureMode.ViewModels
                 await stunClient.CloseProxyAsync(cancellationToken);
             }
 
-            NatCheck5389Outcome.NatType = stunClient.StunResult5389.NATType;
-            NatCheck5389Outcome.LocalIPEndPoint = stunClient.StunResult5389.LocalEndPoint;
-            NatCheck5389Outcome.PublicIPEndPoint = stunClient.StunResult5389.PublicEndPoint;
-            NatCheck5389Outcome.BindingTest = stunClient.StunResult5389.BindingTestResult;
-            NatCheck5389Outcome.MappingBehavior = stunClient.StunResult5389.MappingBehavior;
-            NatCheck5389Outcome.FilteringBehavior = stunClient.StunResult5389.FilteringBehavior;
+            var stunResult5389 = (StunResult5389)stunClient.StunResult;
+            NatCheck5389Outcome.NatType = stunResult5389.NATType;
+            NatCheck5389Outcome.LocalIPEndPoint = stunResult5389.ActualLocalEndPoint;
+            NatCheck5389Outcome.PublicIPEndPoint = stunResult5389.PublicEndPoint;
+            NatCheck5389Outcome.BindingTest = stunResult5389.BindingTestResult;
+            NatCheck5389Outcome.MappingBehavior = stunResult5389.MappingBehavior;
+            NatCheck5389Outcome.FilteringBehavior = stunResult5389.FilteringBehavior;
 
             // udpProxy.Dispose()
             stunClient.Dispose();

@@ -1,10 +1,5 @@
 ﻿using STUN.Enums;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace STUN
 {
@@ -21,7 +16,7 @@ namespace STUN
         public void Clone(StunResult5389 result)
         {
             PublicEndPoint = result.PublicEndPoint;
-            LocalEndPoint = result.LocalEndPoint;
+            ActualLocalEndPoint = result.ActualLocalEndPoint;
 
             OtherEndPoint = result.OtherEndPoint;
             BindingTestResult = result.BindingTestResult;

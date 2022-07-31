@@ -12,5 +12,11 @@ namespace ETLab_MauiPlainPureMode
             @"stun.bige0.com",
             @"stun.stunprotocol.org"
         };
+
+        public static IEnumerable<IPEndPoint> LocalEndPoints = new List<IPEndPoint>
+        {
+            new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort),
+            new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort)
+        };
     }
 }

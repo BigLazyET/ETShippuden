@@ -1,7 +1,6 @@
 ﻿using Microsoft;
 using STUN.Enums;
 using System.Buffers.Binary;
-using System.Security.Cryptography;
 
 namespace STUN.Messages
 {

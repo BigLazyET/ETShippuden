@@ -1,37 +1,34 @@
-﻿using Dns.Net.Abstractions;
-using Dns.Net.Clients;
-using ETLab_MauiPlainPureMode.Models;
-using Microsoft;
-using Socks5.Models;
-using STUN;
+﻿using ETLab_MauiPlainPureMode.Models;
 using STUN.Client;
+using STUN.Enums;
+using STUN.Extensions;
 using STUN.Proxy;
 using System.Net;
-using System.Net.Sockets;
 
 namespace ETLab_MauiPlainPureMode.ViewModels
 {
     public class RFC3489ViewModel : BaseViewModel
     {
-        const ushort DefaultStunServerPort = 3478;
-
-        private IDnsClient _defaultDnsClient = new DefaultDnsClient();
-        private IDnsClient _defaultADnsClient = new DefaultAClient();
-        private IDnsClient _defaultAAAADnsClient = new DefaultAAAAClient();
+        private readonly IUdpProxyFactory _udpProxyFactory;
+        private readonly IStunClientFactory _stunClientFactory;
         private ProxySettingViewModel _proxySetting = App.ProxySettingViewModel;
-        private readonly IUdpProxyFactory _proxyFactory;
 
         public IEnumerable<string> STUNServers => Constants.StunServers;
+
+        public IEnumerable<IPEndPoint> LocalEndPoints => Constants.LocalEndPoints;
 
         public NATCheck3489Outcome NATCheck3489Outcome { get; set; }
 
         public Command CheckNATTypeCommand { get; private set; }
 
-        public string SelectedStunServer { get; set; } = @"stun.miwifi.com";
+        public string SelectedStunServer { get; set; } = Constants.StunServers.First();
+
+        public IPEndPoint SelectedLocalEndPoint { get; set; } = Constants.LocalEndPoints.First();
 
         public RFC3489ViewModel()
         {
-            _proxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IUdpProxyFactory>();
+            _udpProxyFactory = MauiProgram.ServiceProvider.GetRequiredService<IUdpProxyFactory>();
+            _stunClientFactory = MauiProgram.ServiceProvider.GetRequiredService<IStunClientFactory>();
 
             NATCheck3489Outcome = new NATCheck3489Outcome();
             CheckNATTypeCommand = new Command(CheckNATType);
@@ -47,48 +44,28 @@ namespace ETLab_MauiPlainPureMode.ViewModels
 
             var cancellationToken = new CancellationTokenSource().Token;
 
-            var proxyServer = _proxySetting.ProxyServer;
-            var proxyUsername = _proxySetting.ProxyUsername;
-            var proxyPassword = _proxySetting.ProxyPassword;
-            var proxyType = _proxySetting.ProxyType;
-
-            Verify.Operation(HostNameEndPoint.TryParse(proxyServer, out HostNameEndPoint? proxyHostNameEndPoint), "Unknown proxy address");
-            Socks5CreateOption sock5Option = new()
+            var udpCreateOption = new UdpProxyCreateOption
             {
-                Address = await _defaultDnsClient.QueryAsync(proxyHostNameEndPoint.HostName, cancellationToken),
-                Port = proxyHostNameEndPoint.Port,
-                UsernamePassword = new UsernamePassword { UserName = proxyUsername, Password = proxyPassword }
+                LocalEndPoint = NATCheck3489Outcome.ActualLocalIPEndPoint ?? SelectedLocalEndPoint,
+                proxyType = _proxySetting.ProxyType,
+                ProxyServer = _proxySetting.ProxyServer,
+                ProxyUsername = _proxySetting.ProxyUsername,
+                ProxyPassword = _proxySetting.ProxyPassword
             };
+            var udpProxy = await _udpProxyFactory.CreateProxyAsync(udpCreateOption);
 
-#nullable enable
-            Verify.Operation(HostNameEndPoint.TryParse(SelectedStunServer, out HostNameEndPoint? stunHostNameEndPoint, DefaultStunServerPort), @"WRONG STUN Server");
-#nullable disable
-            IPAddress stunServerIp;
-            if (NATCheck3489Outcome.LocalIPEndPoint is null)
+            var stunCreateOption = new StunClientCreateOption
             {
-                stunServerIp = await _defaultDnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
-                NATCheck3489Outcome.LocalIPEndPoint = stunServerIp.AddressFamily is AddressFamily.InterNetworkV6 ?
-                    new IPEndPoint(IPAddress.IPv6Any, IPEndPoint.MinPort) : new IPEndPoint(IPAddress.Any, IPEndPoint.MinPort);
-            }
-            else
-            {
-                if (NATCheck3489Outcome.LocalIPEndPoint.AddressFamily is AddressFamily.InterNetworkV6)
-                    stunServerIp = await _defaultAAAADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
-                else
-                    stunServerIp = await _defaultADnsClient.QueryAsync(stunHostNameEndPoint.HostName, cancellationToken);
-            }
+                UdpProxy = udpProxy,
+                StunProtocol = StunProtocolType.RFC3489,
+                StunServer = SelectedStunServer
+            };
+            var stunClient = await _stunClientFactory.CreateClientAsync(stunCreateOption);
 
-            using var udpProxy = _proxyFactory.CreateProxy(proxyType, NATCheck3489Outcome.LocalIPEndPoint, sock5Option);
-            using var stunClient3489 = new StunClient3489(new IPEndPoint(stunServerIp, stunHostNameEndPoint.Port), NATCheck3489Outcome.LocalIPEndPoint, udpProxy);
-
-            NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
-            NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
-            NATCheck3489Outcome.PublicIPEndPoint = stunClient3489.ClassicStunResult.PublicEndPoint;
-
-            await stunClient3489.ConnectProxyAsync(cancellationToken);
+            await stunClient.ConnectProxyAsync(cancellationToken);
             try
             {
-                await stunClient3489.QueryAsync(cancellationToken);
+                await stunClient.QueryAsync(cancellationToken);
             }
             catch (Exception ex)
             {
@@ -96,12 +73,12 @@ namespace ETLab_MauiPlainPureMode.ViewModels
             }
             finally
             {
-                await stunClient3489.CloseProxyAsync(cancellationToken);
+                await stunClient.CloseProxyAsync(cancellationToken);
             }
 
-            NATCheck3489Outcome.NATTYPE = stunClient3489.ClassicStunResult.NATType;
-            NATCheck3489Outcome.LocalIPEndPoint = stunClient3489.ClassicStunResult.LocalEndPoint;
-            NATCheck3489Outcome.PublicIPEndPoint = stunClient3489.ClassicStunResult.PublicEndPoint;
+            NATCheck3489Outcome.NATTYPE = stunClient.StunResult.NATType;
+            NATCheck3489Outcome.LocalIPEndPoint = stunClient.StunResult.ActualLocalEndPoint;
+            NATCheck3489Outcome.PublicIPEndPoint = stunClient.StunResult.PublicEndPoint;
         }
     }
 }

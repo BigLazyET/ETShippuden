@@ -7,7 +7,7 @@ namespace STUN
         public void Clone(StunResult3489 result)
         {
             PublicEndPoint = result.PublicEndPoint;
-            LocalEndPoint = result.LocalEndPoint;
+            ActualLocalEndPoint = result.ActualLocalEndPoint;
             NATType = result.NATType;
         }
     }

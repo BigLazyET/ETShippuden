@@ -9,12 +9,12 @@ namespace STUN
 
         public IPEndPoint? PublicEndPoint { get; set; }
 
-        public IPEndPoint? LocalEndPoint { get; set; }
+        public IPEndPoint? ActualLocalEndPoint { get; set; }
 
         public virtual void Reset()
         {
             PublicEndPoint = default;
-            LocalEndPoint = default;
+            ActualLocalEndPoint = default;
             NATType = NatType.Unknown;
         }
     }

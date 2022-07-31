@@ -7,9 +7,9 @@ namespace ETLab_MauiPlainPureMode.Models
     public class NATCheck3489Outcome : ObservableObject
     {
         private NatType _natType = NatType.Unknown;
-        // new IPEndPoint(IPAddress.Any, 0); //new IPEndPoint(IPAddress.Parse("0.0.0.0"), 0);
         private IPEndPoint _localIPEndPoint;
         private IPEndPoint _publicIPEndPoint;
+        private IPEndPoint _actualLocalIPEndPoint;
 
         /// <summary>
         /// 检测的NAT类型
@@ -25,5 +25,21 @@ namespace ETLab_MauiPlainPureMode.Models
         /// 本地地址通过NAT映射在公网的地址(IP:Port)
         /// </summary>
         public IPEndPoint PublicIPEndPoint { get => _publicIPEndPoint; set => SetProperty(ref _publicIPEndPoint, value); }
+
+        /// <summary>
+        /// 实际本地发送请求的地址
+        /// 可以理解为StunServer Response中实际返回的
+        /// </summary>
+        public IPEndPoint ActualLocalIPEndPoint
+        {
+            get
+            {
+                return _actualLocalIPEndPoint;
+            }
+            set
+            {
+                SetProperty(ref _actualLocalIPEndPoint, value);
+            }
+        }
     }
 }

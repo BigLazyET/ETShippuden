@@ -1,9 +1,7 @@
-﻿using Microsoft;
-using STUN.Enums;
+﻿using STUN.Enums;
 using STUN.Messages;
 using STUN.Proxy;
 using System.Net;
-using System.Threading;
 
 namespace STUN.Client
 {
@@ -19,27 +17,16 @@ namespace STUN.Client
     /// </summary>
     public class StunClient5389 : StunClient
     {
-        // public IPEndPoint LocalEndPoint => (IPEndPoint)_udpProxy.Client.LocalEndPoint!;
-
-        private readonly IPEndPoint _remoteEndPoint;
-
-        private readonly IUdpProxy _udpProxy;
+        public override StunResult5389 StunResult => new ();
 
         public StunClient5389(IPEndPoint remoteEndPoint, IUdpProxy udpProxy, TimeSpan receiveTimeout)
-            : base(remoteEndPoint, udpProxy, receiveTimeout)
-        {
-            Requires.NotNull(remoteEndPoint, nameof(remoteEndPoint));
-            Requires.NotNull(udpProxy, nameof(udpProxy));
-
-            _remoteEndPoint = remoteEndPoint;
-            _udpProxy = udpProxy;
-        }
+            : base(remoteEndPoint, udpProxy, receiveTimeout) { }
 
         public override async ValueTask QueryAsync(CancellationToken cancellationToken = default)
         {
             // Pre Binding Request Check
             await PreBindingRequestCheckAsync();
-            if(StunResult5389.BindingTestResult != BindingTestResult.Success)
+            if(StunResult.BindingTestResult != BindingTestResult.Success)
                 return;
 
             // Mapping Behavior Check
@@ -52,7 +39,7 @@ namespace STUN.Client
                 isMappingCarryOn = await IsCarryOnByMappingCheck3Async(cancellationToken);
 
             if (isMappingCarryOn)
-                StunResult5389.MappingBehavior = MappingBehavior.Unknown;
+                StunResult.MappingBehavior = MappingBehavior.Unknown;
 
             // Filtering Behavior Check
             var isFilteringCarryOn = await IsCarryOnByFilteringCheck1Async(cancellationToken);
@@ -61,7 +48,7 @@ namespace STUN.Client
                 isFilteringCarryOn = await IsCarryOnByFilteringCheck2Async(cancellationToken);
 
             if (isFilteringCarryOn)
-                StunResult5389.FilteringBehavior = FilteringBehavior.Unknown;
+                StunResult.FilteringBehavior = FilteringBehavior.Unknown;
 
 
             // 将NAT映射规则和过滤规则组合起来就形成9中不同的NAT行为类型，而RFC3489只描述了9种NAT组合行为类型中的以下4种：
@@ -70,16 +57,16 @@ namespace STUN.Client
             // 3）Endpoint Independent Mapping和Address and Port - Dependent Filtering组合对应于RFC3489中的Port Restricted Cone NAT；
             // 4）Address and Port - Dependent Mapping和Address and Port - Dependent Filtering组合是RFC3489中所说的Symmetric NAT。
 
-            var mappingBehavior = StunResult5389.MappingBehavior;
-            var filteringBehavior = StunResult5389.FilteringBehavior;
+            var mappingBehavior = StunResult.MappingBehavior;
+            var filteringBehavior = StunResult.FilteringBehavior;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.EndPointIndependent)
-                StunResult5389.NATType = NatType.FullCone;
+                StunResult.NATType = NatType.FullCone;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.AddressDependent)
-                StunResult5389.NATType = NatType.RestrictedCone;
+                StunResult.NATType = NatType.RestrictedCone;
             if (mappingBehavior == MappingBehavior.EndPointIndependent && filteringBehavior == FilteringBehavior.AddressAndPortDependent)
-                StunResult5389.NATType = NatType.PortRestrictedCone;
+                StunResult.NATType = NatType.PortRestrictedCone;
             if (mappingBehavior == MappingBehavior.AddressAndPortDependent && filteringBehavior == FilteringBehavior.AddressAndPortDependent)
-                StunResult5389.NATType = NatType.Symmetric;
+                StunResult.NATType = NatType.Symmetric;
         }
 
         #region Pre-BindingRequest Check
@@ -87,18 +74,18 @@ namespace STUN.Client
         {
             var request = new StunMessage5389();
 
-            var response = await RequestAsync(request, _remoteEndPoint, _remoteEndPoint, cancellationToken);
+            var response = await RequestAsync(request, RemoteEndPoint, RemoteEndPoint, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
             var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
 
             if (response is null)
-                StunResult5389.BindingTestResult = BindingTestResult.Fail;
+                StunResult.BindingTestResult = BindingTestResult.Fail;
             if (mappedEndPoint is null)
-                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
-            if (stunOtherEndPoint is not null && stunOtherEndPoint.Address.Equals(_remoteEndPoint.Address) && stunOtherEndPoint.Port == _remoteEndPoint.Port)
-                StunResult5389.BindingTestResult = BindingTestResult.UnSupportedServer;
+                StunResult.BindingTestResult = BindingTestResult.UnSupportedServer;
+            if (stunOtherEndPoint is not null && stunOtherEndPoint.Address.Equals(RemoteEndPoint.Address) && stunOtherEndPoint.Port == RemoteEndPoint.Port)
+                StunResult.BindingTestResult = BindingTestResult.UnSupportedServer;
 
-            StunResult5389.BindingTestResult = BindingTestResult.Success;
+            StunResult.BindingTestResult = BindingTestResult.Success;
         }
         #endregion
 
@@ -114,25 +101,24 @@ namespace STUN.Client
         private async ValueTask<bool> IsCarryOnByMappingCheck1Async(CancellationToken cancellationToken = default)
         {
             var request = new StunMessage5389();    // the default of StunMessageType is BindingRequest
-            var response = await RequestAsync(request, _remoteEndPoint, _remoteEndPoint, cancellationToken);
-            var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
-            var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
+            var response = await RequestAsync(request, RemoteEndPoint, RemoteEndPoint, cancellationToken);
+            var mappedEndPoint = response?.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
+            var stunOtherEndPoint = response?.stunMessage.GetStunOtherEndPoint();
 
             if (response is not null && mappedEndPoint is not null)
             {
-                var localIPEndPoint = (IPEndPoint)_udpProxy.Client.LocalEndPoint!;
                 // if (Equals(mappedEndPoint.Address, response.localAddress) && mappedEndPoint.Port == localIPEndPoint.Port)
-                if (Equals(mappedEndPoint.Address, localIPEndPoint.Address) && mappedEndPoint.Port == localIPEndPoint.Port)
+                if (Equals(mappedEndPoint.Address, LocalEndPoint.Address) && mappedEndPoint.Port == LocalEndPoint.Port)
                 {
-                    StunResult5389.MappingBehavior = MappingBehavior.Direct;
-                    StunResult5389.PublicEndPoint = mappedEndPoint;
-                    StunResult5389.OtherEndPoint = stunOtherEndPoint;
+                    StunResult.MappingBehavior = MappingBehavior.Direct;
+                    StunResult.PublicEndPoint = mappedEndPoint;
+                    StunResult.OtherEndPoint = stunOtherEndPoint;
                     return false;
                 }
             }
 
-            StunResult5389.PublicEndPoint = mappedEndPoint;
-            StunResult5389.OtherEndPoint = stunOtherEndPoint;
+            StunResult.PublicEndPoint = mappedEndPoint;
+            StunResult.OtherEndPoint = stunOtherEndPoint;
 
             return true;
         }
@@ -150,19 +136,18 @@ namespace STUN.Client
         {
             var request = new StunMessage5389();
 
-            var remoteIPEndPoint = new IPEndPoint(StunResult5389.OtherEndPoint!.Address, _remoteEndPoint.Port);
+            var remoteIPEndPoint = new IPEndPoint(StunResult.OtherEndPoint!.Address, RemoteEndPoint.Port);
             var response = await RequestAsync(request, remoteIPEndPoint, remoteIPEndPoint, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
-            var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
 
-            if (Equals(mappedEndPoint.Address, StunResult5389.PublicEndPoint.Address) && mappedEndPoint.Port == StunResult5389.PublicEndPoint.Port)
+            if (Equals(mappedEndPoint.Address, StunResult.PublicEndPoint.Address) && mappedEndPoint.Port == StunResult.PublicEndPoint.Port)
             {
-                StunResult5389.MappingBehavior = MappingBehavior.EndPointIndependent;
-                StunResult5389.PublicEndPoint = mappedEndPoint;
+                StunResult.MappingBehavior = MappingBehavior.EndPointIndependent;
+                StunResult.PublicEndPoint = mappedEndPoint;
                 return false;
             }
 
-            StunResult5389.PublicEndPoint = mappedEndPoint;
+            StunResult.PublicEndPoint = mappedEndPoint;
             return true;
         }
 
@@ -180,24 +165,23 @@ namespace STUN.Client
         {
             var request = new StunMessage5389();
 
-            var response = await RequestAsync(request, StunResult5389.OtherEndPoint!, StunResult5389.OtherEndPoint!, cancellationToken);
+            var response = await RequestAsync(request, StunResult.OtherEndPoint!, StunResult.OtherEndPoint!, cancellationToken);
             var mappedEndPoint = response.stunMessage.GetIPEndPointFromXorMappedAddressAttribute();
-            var stunOtherEndPoint = response.stunMessage.GetStunOtherEndPoint();
 
-            if (Equals(StunResult5389.PublicEndPoint.Address, mappedEndPoint.Address) && StunResult5389.PublicEndPoint.Port == mappedEndPoint.Port)
+            if (Equals(StunResult.PublicEndPoint.Address, mappedEndPoint.Address) && StunResult.PublicEndPoint.Port == mappedEndPoint.Port)
             {
-                StunResult5389.MappingBehavior = MappingBehavior.AddressDependent;
-                StunResult5389.PublicEndPoint = mappedEndPoint;
+                StunResult.MappingBehavior = MappingBehavior.AddressDependent;
+                StunResult.PublicEndPoint = mappedEndPoint;
                 return false;
             }
-            if (!Equals(StunResult5389.PublicEndPoint.Address, mappedEndPoint.Address) && StunResult5389.PublicEndPoint.Port != mappedEndPoint.Port)
+            if (!Equals(StunResult.PublicEndPoint.Address, mappedEndPoint.Address) && StunResult.PublicEndPoint.Port != mappedEndPoint.Port)
             {
-                StunResult5389.MappingBehavior = MappingBehavior.AddressAndPortDependent;
-                StunResult5389.PublicEndPoint = mappedEndPoint;
+                StunResult.MappingBehavior = MappingBehavior.AddressAndPortDependent;
+                StunResult.PublicEndPoint = mappedEndPoint;
                 return false;
             }
 
-            StunResult5389.PublicEndPoint = mappedEndPoint;
+            StunResult.PublicEndPoint = mappedEndPoint;
             return true;
         }
         #endregion
@@ -219,10 +203,10 @@ namespace STUN.Client
                 Attributes = new[] { StunAttributeExtensions.BuildChangeRequest(true, true) }
             };
 
-            var response = await RequestAsync(request, _remoteEndPoint, StunResult5389.OtherEndPoint, cancellationToken);
+            var response = await RequestAsync(request, RemoteEndPoint, StunResult.OtherEndPoint, cancellationToken);
             if (response is not null)
             {
-                StunResult5389.FilteringBehavior = Equals(response.remote, StunResult5389.OtherEndPoint) ? FilteringBehavior.EndPointIndependent
+                StunResult.FilteringBehavior = Equals(response.remote, StunResult.OtherEndPoint) ? FilteringBehavior.EndPointIndependent
                     : FilteringBehavior.UnSupportedServer;
                 return false;
             }
@@ -249,15 +233,16 @@ namespace STUN.Client
                 Attributes = new[] { StunAttributeExtensions.BuildChangeRequest(false, true) }
             };
 
-            var response = await RequestAsync(request, _remoteEndPoint, _remoteEndPoint, cancellationToken);
+            var receiveEndPoint = new IPEndPoint(RemoteEndPoint.Address, StunResult.OtherEndPoint.Port);
+            var response = await RequestAsync(request, RemoteEndPoint, receiveEndPoint, cancellationToken);
 
             if (response is null)
             {
-                StunResult5389.FilteringBehavior = FilteringBehavior.AddressAndPortDependent;
+                StunResult.FilteringBehavior = FilteringBehavior.AddressAndPortDependent;
                 return true;
             }
 
-            StunResult5389.FilteringBehavior = (Equals(response.remote.Address, _remoteEndPoint.Address) && response.remote.Port != _remoteEndPoint.Port) ?
+            StunResult.FilteringBehavior = (Equals(response.remote.Address, RemoteEndPoint.Address) && response.remote.Port != RemoteEndPoint.Port) ?
                     FilteringBehavior.AddressDependent : FilteringBehavior.UnSupportedServer;
             return false;
         }

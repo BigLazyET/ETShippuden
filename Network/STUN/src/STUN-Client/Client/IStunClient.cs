@@ -2,7 +2,7 @@
 {
     public interface IStunClient : IDisposable
     {
-        StunResult5389 StunResult5389 { get; }
+        StunResult StunResult { get; }
 
         ValueTask ConnectProxyAsync(CancellationToken cancellationToken = default);
 

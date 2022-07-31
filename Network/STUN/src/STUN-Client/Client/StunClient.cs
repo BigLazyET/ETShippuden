@@ -4,30 +4,34 @@ using System.Buffers;
 using System.Net.Sockets;
 using System.Net;
 using Microsoft;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace STUN.Client
 {
     public abstract class StunClient : IStunClient
     {
-        private IPEndPoint _remoteEndPoint;
+        protected IPEndPoint RemoteEndPoint { get; set; }
 
         protected IUdpProxy UdpProxy { get; set; }
 
         protected TimeSpan ReceiveTimeout { get; set; } = TimeSpan.FromSeconds(3);
 
-        public StunResult5389 StunResult5389 => new();
+        protected IPEndPoint LocalEndPoint => UdpProxy.LocalEndPoint;
+
+        public abstract StunResult StunResult { get; }
+
+        public StunClient(IPEndPoint remoteEndPoint, IUdpProxy udpProxy) : this(remoteEndPoint, udpProxy, TimeSpan.FromSeconds(3)) { }
 
         public StunClient(IPEndPoint remoteEndPoint, IUdpProxy udpProxy, TimeSpan receiveTimeout)
         {
             Requires.NotNull(remoteEndPoint, nameof(remoteEndPoint));
             Requires.NotNull(udpProxy, nameof(udpProxy));
 
-            _remoteEndPoint = remoteEndPoint;
+            RemoteEndPoint = remoteEndPoint;
             UdpProxy = udpProxy;
             ReceiveTimeout = receiveTimeout;
         }
+
+        public abstract ValueTask QueryAsync(CancellationToken cancellationToken = default);
 
         public async ValueTask CloseProxyAsync(CancellationToken cancellationToken = default)
         {
@@ -45,8 +49,6 @@ namespace STUN.Client
         {
             UdpProxy.Dispose();
         }
-
-        public abstract ValueTask QueryAsync(CancellationToken cancellationToken = default);
 
         protected async ValueTask<StunResponse> RequestAsync(StunMessage5389 sendMessage, IPEndPoint remote, IPEndPoint receive, CancellationToken cancellationToken)
         {
@@ -73,14 +75,6 @@ namespace STUN.Client
                 Console.WriteLine(ex);
             }
             return default;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool HasValidOtherAddress([NotNullWhen(true)] IPEndPoint? other)
-        {
-            return other is not null
-                   && !Equals(other.Address, _remoteEndPoint.Address)
-                   && other.Port != _remoteEndPoint.Port;
         }
     }
 }

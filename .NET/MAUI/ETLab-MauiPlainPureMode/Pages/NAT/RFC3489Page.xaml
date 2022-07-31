@@ -32,11 +32,32 @@
             <Entry Text="{Binding NATCheck3489Outcome.NATTYPE}" />
         </Border>
         <Label Text="Local IPEndPoint" Margin="0,15,0,5"/>
-        <Border Stroke="Gray"
+        <!--<Border Stroke="Gray"
                 StrokeThickness="1"
                 StrokeShape="RoundRectangle 5" InputTransparent="True"
                 Padding="10,0">
             <Entry Text="{Binding Path=NATCheck3489Outcome.LocalIPEndPoint}" />
+        </Border>-->
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Border.Content>
+                <Picker VerticalOptions="CenterAndExpand"
+                        CharacterSpacing="1"
+                        SelectedItem="{Binding SelectedLocalEndPoint}"
+                        ItemsSource="{Binding LocalEndPoints}">
+                </Picker>
+            </Border.Content>
+        </Border>
+        <Label Text="Actual Local IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry Text="{Binding Path=NATCheck3489Outcome.ActualLocalIPEndPoint}" />
         </Border>
         <Label Text="Public IPEndPoint"
                Margin="0,15,0,5" />

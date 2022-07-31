@@ -22,8 +22,9 @@ namespace STUN.Proxy
             }
         }
 
+        public IPEndPoint LocalEndPoint { get; }
+
         private readonly Socks5CreateOption _socks5Options;
-        private readonly IPEndPoint _localEndPoint;
 
         private Socks5Client? _socks5Client;
         private ServerBound _udpServerBound;
@@ -35,7 +36,7 @@ namespace STUN.Proxy
             Requires.NotNull(socks5Options, nameof(socks5Options));
             Requires.Argument(socks5Options.Address is not null, nameof(socks5Options), @"SOCKS5 address is null");
 
-            _localEndPoint = localEndPoint;
+            LocalEndPoint = localEndPoint;
             _socks5Options = socks5Options;
         }
 
@@ -45,7 +46,7 @@ namespace STUN.Proxy
             _socks5Client?.Dispose();
 
             _socks5Client = new Socks5Client(_socks5Options);
-            _udpServerBound = await _socks5Client.UdpAssociateAsync(_localEndPoint.Address, (ushort)_localEndPoint.Port, cancellationToken);
+            _udpServerBound = await _socks5Client.UdpAssociateAsync(LocalEndPoint.Address, (ushort)LocalEndPoint.Port, cancellationToken);
         }
 
         public ValueTask CloseAsync(CancellationToken cancellationToken = default)

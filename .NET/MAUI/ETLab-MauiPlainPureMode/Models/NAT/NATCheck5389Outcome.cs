@@ -12,6 +12,7 @@ namespace ETLab_MauiPlainPureMode.Models
         private FilteringBehavior _filteringBehavior;
         private IPEndPoint _localIPEndPoint;
         private IPEndPoint _publicIPEndPoint;
+        private IPEndPoint _actualLocalIPEndPoint;
 
         /// <summary>
         /// NAT类型
@@ -42,5 +43,21 @@ namespace ETLab_MauiPlainPureMode.Models
         /// NAT映射过后的公网IP
         /// </summary>
         public IPEndPoint PublicIPEndPoint { get => _publicIPEndPoint; set => SetProperty(ref _publicIPEndPoint, value); }
+
+        /// <summary>
+        /// 实际本地发送请求的地址
+        /// 可以理解为StunServer Response中实际返回的
+        /// </summary>
+        public IPEndPoint ActualLocalIPEndPoint
+        {
+            get
+            {
+                return _actualLocalIPEndPoint;
+            }
+            set
+            {
+                SetProperty(ref _actualLocalIPEndPoint, value);
+            }
+        }
     }
 }

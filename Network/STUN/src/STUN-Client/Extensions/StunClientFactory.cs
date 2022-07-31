@@ -2,7 +2,6 @@
 using Microsoft;
 using STUN.Client;
 using STUN.Enums;
-using STUN.Proxy;
 using System.Net;
 using System.Net.Sockets;
 
@@ -36,7 +35,7 @@ namespace STUN.Extensions
 
             IStunClient stunClient = createOption.StunProtocol switch
             {
-                StunProtocolType.RFC3489 => new StunClient3489(new IPEndPoint(stunIp, stunHostnameEndPoint.Port), localEndPoint, udpProxy),
+                StunProtocolType.RFC3489 => new StunClient3489(new IPEndPoint(stunIp, stunHostnameEndPoint.Port), udpProxy),
                 StunProtocolType.RFC5389 => new StunClient5389(new IPEndPoint(stunIp, stunHostnameEndPoint.Port), udpProxy, TimeSpan.FromSeconds(3)),
                 _ => throw Assumes.NotReachable()
             };

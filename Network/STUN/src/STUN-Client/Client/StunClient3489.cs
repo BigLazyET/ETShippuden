@@ -1,49 +1,15 @@
 ﻿using STUN.Enums;
 using STUN.Messages;
 using STUN.Proxy;
-using System.Buffers;
 using System.Net;
-using System.Net.Sockets;
 
 namespace STUN.Client
 {
-    public class StunClient3489 : IStunClient
+    public class StunClient3489 : StunClient
     {
-        private readonly IUdpProxy _udpProxy;
+        public override StunResult3489 StunResult => new StunResult3489();
 
-        private readonly IPEndPoint _remoteEndPoint;
-
-        public virtual IPEndPoint LocalEndPoint => (IPEndPoint)_udpProxy.Client.LocalEndPoint!;
-
-        public TimeSpan ReceiveTimeout { get; set; } = TimeSpan.FromSeconds(3);
-
-        public StunResult3489 ClassicStunResult { get; } = new();
-
-        public StunResult5389 StunResult5389 => throw new NotImplementedException();
-
-        public StunClient3489(IPEndPoint remoteEndPoint, IPEndPoint localEndPoint, IUdpProxy? udpProxy = null)
-        {
-            _udpProxy = udpProxy ?? new NoneUdpProxy(localEndPoint);
-            _remoteEndPoint = remoteEndPoint;
-            ClassicStunResult.LocalEndPoint = localEndPoint;
-        }
-
-        public async ValueTask CloseProxyAsync(CancellationToken cancellationToken = default)
-        {
-            await _udpProxy.CloseAsync(cancellationToken);
-        }
-
-        public async ValueTask ConnectProxyAsync(CancellationToken cancellationToken = default)
-        {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-            cts.CancelAfter(ReceiveTimeout);
-            await _udpProxy.ConnectAsync(cts.Token);
-        }
-
-        public void Dispose()
-        {
-            _udpProxy.Dispose();
-        }
+        public StunClient3489(IPEndPoint remoteEndPoint, IUdpProxy udpProxy) : base(remoteEndPoint, udpProxy) { }
 
         /// <summary>
         /// 判断NAT类型的核心逻辑
@@ -51,9 +17,9 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public async ValueTask QueryAsync(CancellationToken cancellationToken = default)
+        public override async ValueTask QueryAsync(CancellationToken cancellationToken = default)
         {
-            ClassicStunResult.Reset();
+            StunResult.Reset();
 
             // Step 1：send request to server => messageType: BindingRequest; attributeType not set
             var stepResponse1 = await TestStep1Async(cancellationToken);
@@ -61,100 +27,92 @@ namespace STUN.Client
             // Not Receive：udp blocked
             if (stepResponse1 == null)
             {
-                ClassicStunResult.NATType = NatType.UdpBlocked;
+                StunResult.NATType = NatType.UdpBlocked;
                 return;
             }
 
             // Request IP is alse be returned by response
-            ClassicStunResult.LocalEndPoint = new IPEndPoint(stepResponse1.localAddress, LocalEndPoint.Port);
+            StunResult.ActualLocalEndPoint = new IPEndPoint(stepResponse1.localAddress, LocalEndPoint.Port);
 
             // Get the public ip of client according to the response from the server
-            var mappedAddress1 = stepResponse1.stunMessage.GetIPEndPointFromMappedAddressAttribute();
-            ClassicStunResult.PublicEndPoint = mappedAddress1;
+            var mappedIPEndPoint1 = stepResponse1.stunMessage.GetIPEndPointFromMappedAddressAttribute();
+            StunResult.PublicEndPoint = mappedIPEndPoint1;
 
             // Get the another IPEndPoint of server
             var serverAnotherIPEndpoint = stepResponse1.stunMessage.GetIPEndPointFromChangedAddressAttribute();
 
             // Check the server is Single-IP Server or not? if it is, then not-supported nat type test
-            if (mappedAddress1 is null || serverAnotherIPEndpoint is null ||
+            if (mappedIPEndPoint1 is null || serverAnotherIPEndpoint is null ||
                 Equals(serverAnotherIPEndpoint.Address, stepResponse1.remote.Address) || Equals(serverAnotherIPEndpoint.Port, stepResponse1.remote.Port))
             {
-                ClassicStunResult.NATType = NatType.UnsupportedServer;
+                StunResult.NATType = NatType.UnsupportedServer;
                 return;
             }
 
             // Is Public IP == link's IP? if it is, then no nat
-            var isPublic = Equals(mappedAddress1.Address, stepResponse1.localAddress) && Equals(mappedAddress1.Port, LocalEndPoint.Port);
+            var isPublic = Equals(mappedIPEndPoint1.Address, stepResponse1.localAddress) && Equals(mappedIPEndPoint1.Port, LocalEndPoint.Port);
 
-            // Step 2：send request to server => messageType: BindingRequest; attributeType：ChangeRequest
+            // Step 2：send request to server => messageType: BindingRequest; attributeType：ChangeRequest IP & Port
             var stepResponse2 = await TestStep2Async(serverAnotherIPEndpoint, cancellationToken);
-            var mappedAddress2 = stepResponse2?.stunMessage.GetIPEndPointFromMappedAddressAttribute();
-
-            if (stepResponse2 != null)
-            {
-                // Check the server is Single-IP Server or not? if it is, then not-supported nat type test
-                if (Equals(stepResponse2.remote.Address, stepResponse1.remote.Address) &&
-                    (stepResponse2.remote.Port == stepResponse1.remote.Port))
-                {
-                    ClassicStunResult.NATType = NatType.UnsupportedServer;
-                    return;
-                }
-            }
+            var mappedIPEndPoint2 = stepResponse2?.stunMessage.GetIPEndPointFromMappedAddressAttribute();
 
             if (isPublic)
             {
                 if (stepResponse2 is null)
                 {
-                    ClassicStunResult.NATType = NatType.SymmetricUdpFirewall;
+                    StunResult.NATType = NatType.SymmetricUdpFirewall;
                     return;
                 }
                 else
                 {
-                    ClassicStunResult.NATType = NatType.OpenInternet;
+                    StunResult.NATType = NatType.OpenInternet;
                     return;
                 }
             }
 
             if (stepResponse2 is not null)
             {
-                ClassicStunResult.NATType = NatType.FullCone;
-                ClassicStunResult.PublicEndPoint = mappedAddress2;
+                StunResult.NATType = NatType.FullCone;
+                StunResult.PublicEndPoint = mappedIPEndPoint2;
+                StunResult.ActualLocalEndPoint = new IPEndPoint(stepResponse2.localAddress, LocalEndPoint.Port);
                 return;
             }
 
             // Step 3：send request to server => messageType: BindingRequest; attributeType not set
-            var stepResponse1_2 = await TestStep1_2Async(serverAnotherIPEndpoint, cancellationToken);
+            var stepResponse3 = await TestStep3Async(serverAnotherIPEndpoint, cancellationToken);
 
-            if (stepResponse1_2 is null)
+            if (stepResponse3 is null)
             {
-                ClassicStunResult.NATType = NatType.Unknown;
+                StunResult.NATType = NatType.Unknown;
                 return;
             }
 
-            var mappedAddress1_2 = stepResponse1_2.stunMessage.GetIPEndPointFromMappedAddressAttribute();
-            if (!Equals(mappedAddress1_2, ClassicStunResult.PublicEndPoint))
+            var mappedIPEndPoint3 = stepResponse3.stunMessage.GetIPEndPointFromMappedAddressAttribute();
+            if (!Equals(mappedIPEndPoint3, StunResult.PublicEndPoint))
             {
-                ClassicStunResult.NATType = NatType.Symmetric;
-                ClassicStunResult.PublicEndPoint = mappedAddress1_2;
+                StunResult.NATType = NatType.Symmetric;
+                StunResult.PublicEndPoint = mappedIPEndPoint3;
+                StunResult.ActualLocalEndPoint = new IPEndPoint(stepResponse3.localAddress, LocalEndPoint.Port);
                 return;
             }
 
             // Step 4：send request to server => messageType: BindingRequest; attributeType：ChangedRequest with port (IP is not changed)
-            var stepResponse3 = await TestStep3Async(cancellationToken);
-            if (stepResponse3 is not null)
+            var stepResponse4 = await TestStep4Async(cancellationToken);
+            if (stepResponse4 is null)
             {
-                var mappedAddress3 = stepResponse3.stunMessage.GetIPEndPointFromMappedAddressAttribute();
-                if (mappedAddress3 is not null &&
-                    Equals(stepResponse3.remote.Address, stepResponse1.remote.Address) &&
-                    stepResponse3.remote.Port != stepResponse1.remote.Port)
-                {
-                    ClassicStunResult.NATType = NatType.RestrictedCone;
-                    ClassicStunResult.PublicEndPoint = mappedAddress3;
-                }
+                StunResult.NATType = NatType.PortRestrictedCone;
+                StunResult.PublicEndPoint = mappedIPEndPoint3;
             }
 
-            ClassicStunResult.NATType = NatType.PortRestrictedCone;
-            ClassicStunResult.PublicEndPoint = mappedAddress1_2;
+            var mappedIPEndPoint4 = stepResponse4.stunMessage.GetIPEndPointFromMappedAddressAttribute();
+            if (mappedIPEndPoint4 is not null &&
+                Equals(stepResponse4.remote.Address, stepResponse1.remote.Address) &&
+                stepResponse4.remote.Port != stepResponse1.remote.Port)
+            {
+                StunResult.NATType = NatType.RestrictedCone;
+                StunResult.PublicEndPoint = mappedIPEndPoint4;
+                StunResult.ActualLocalEndPoint = new IPEndPoint(stepResponse4.localAddress, LocalEndPoint.Port);
+            }
         }
 
         /// <summary>
@@ -174,7 +132,7 @@ namespace STUN.Client
                 }
             };
 
-            var response = await RequestAsync(stunMessage, _remoteEndPoint, _remoteEndPoint, cancellationToken);
+            var response = await RequestAsync(stunMessage, RemoteEndPoint, RemoteEndPoint, cancellationToken);
             return response;
         }
 
@@ -200,7 +158,7 @@ namespace STUN.Client
                 Attributes = new[] { StunAttributeExtensions.BuildChangeRequest(true, true) }
             };
 
-            var response = await RequestAsync(stunMessage, _remoteEndPoint, other, cancellationToken);
+            var response = await RequestAsync(stunMessage, RemoteEndPoint, other, cancellationToken);
             return response;
         }
 
@@ -211,7 +169,7 @@ namespace STUN.Client
         /// <param name="other"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual async ValueTask<StunResponse> TestStep1_2Async(IPEndPoint other, CancellationToken cancellationToken)
+        public virtual async ValueTask<StunResponse> TestStep3Async(IPEndPoint other, CancellationToken cancellationToken)
         {
             var stunMessage = new StunMessage5389
             {
@@ -231,7 +189,7 @@ namespace STUN.Client
         /// </summary>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public virtual async ValueTask<StunResponse> TestStep3Async(CancellationToken cancellationToken)
+        public virtual async ValueTask<StunResponse> TestStep4Async(CancellationToken cancellationToken)
         {
             var stunMessage = new StunMessage5389
             {
@@ -243,35 +201,8 @@ namespace STUN.Client
                 Attributes = new[] { StunAttributeExtensions.BuildChangeRequest(false, true) }
             };
 
-            var response = await RequestAsync(stunMessage, _remoteEndPoint, _remoteEndPoint, cancellationToken);
+            var response = await RequestAsync(stunMessage, RemoteEndPoint, RemoteEndPoint, cancellationToken);
             return response;
-        }
-
-        private async ValueTask<StunResponse> RequestAsync(StunMessage5389 sendMessage, IPEndPoint remote, IPEndPoint receive, CancellationToken cancellationToken)
-        {
-            try
-            {
-                using var memoryOwner = MemoryPool<byte>.Shared.Rent(0x10000);
-                var buffer = memoryOwner.Memory;
-                var length = sendMessage.WriteTo(buffer.Span);
-
-                var bytesSendLen = await _udpProxy.SendToAsync(buffer[..length], SocketFlags.None, remote, cancellationToken);
-
-                using var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                cts.CancelAfter(ReceiveTimeout);
-                var receiveMessage = await _udpProxy.ReceiveMessageFromAsync(buffer, SocketFlags.None, receive, cts.Token);
-
-                var stuMessage = new StunMessage5389();
-                if (stuMessage.TryParse(buffer.Span[..receiveMessage.ReceivedBytes]) && stuMessage.IsSameTransaction(sendMessage))
-                {
-                    return new StunResponse(stuMessage, (IPEndPoint)receiveMessage.RemoteEndPoint, receiveMessage.PacketInformation.Address);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex);
-            }
-            return default;
         }
     }
 }

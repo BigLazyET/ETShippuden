@@ -56,13 +56,35 @@
         </Border>
         <Label Text="Local IPEndPoint"
                Margin="0,15,0,5" />
-        <Border Stroke="Gray"
+        <!--<Border Stroke="Gray"
                 StrokeThickness="1"
                 StrokeShape="RoundRectangle 5"
                 InputTransparent="True"
                 Padding="10,0">
             <Entry IsEnabled="False"
                    Text="{Binding NatCheck5389Outcome.LocalIPEndPoint}" />
+        </Border>-->
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                Padding="10,0">
+            <Border.Content>
+                <Picker VerticalOptions="CenterAndExpand"
+                        CharacterSpacing="1"
+                        SelectedItem="{Binding SelectedLocalEndPoint}"
+                        ItemsSource="{Binding LocalEndPoints}">
+                </Picker>
+            </Border.Content>
+        </Border>
+        <Label Text="Actual Local IPEndPoint"
+               Margin="0,15,0,5" />
+        <Border Stroke="Gray"
+                StrokeThickness="1"
+                StrokeShape="RoundRectangle 5"
+                InputTransparent="True"
+                Padding="10,0">
+            <Entry IsEnabled="False"
+                   Text="{Binding NatCheck5389Outcome.ActualLocalIPEndPoint}" />
         </Border>
         <Label Text="Public IPEndPoint"
                Margin="0,15,0,5" />
